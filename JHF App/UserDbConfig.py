@@ -1,5 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from dateutil.parser import parser
 
 app = Flask(__name__)
 #db = sqlite3.connect('clients.db') #creates a new db if it doesn't exist
@@ -16,10 +18,10 @@ class prospects(db.Model):
     retirement_age = db.Column(db.Integer)
     referrer_id = db.Column(db.Integer, db.ForeignKey('referrers.id'))
 
-    def __init__(self, fname, lname,dob,retirement_age):
+    def __init__(self, fname, lname,retirement_age):
         self.fname = fname
         self.lname = lname
-        self.dob = datetime.datetime.strptime(dob, "%d%m%Y")
+    #    self.dob = datetime.strptime(dob, "%Y-%m-%d")
         self.retirement_age = retirement_age
 
 class referrers(db.Model):
@@ -28,5 +30,3 @@ class referrers(db.Model):
     city = db.Column(db.String(45))
     industry = db.Column(db.String(100))
     prospects = db.relationship('prospects', backref='referrers', lazy='dynamic')
-
-db.create_all()
