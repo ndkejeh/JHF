@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Users DB Form</title>
+    <!--Jquery CDN-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  </head>
+  <body>
+      <h1>Enter a New Prospect</h1>
+        <form id="adduser" action="/jhf/api/v1.0/users" method="POST">
+            First name:<br>
+            <input type="text" name="fname" placeholder="First Name">
+            <br>
+            Last name:<br>
+            <input type="text" name="lname" placeholder="Last Name">
+            <br>
+            D.O.B:<br>
+            <input type="text" name="dob" placeholder="YYYY-MM-DD">
+            <br>
+            Retirement Age: <br>
+            <input type="text" name="retirement_age" placeholder="60?">
+            <br><br>
+            <input type="submit" value="Submit">
+        </form>
+    <p>Submit should run the API to add user</p>
+    <script>
+        function convertFormToJSON(form){
+            var array = $(form).serializeArray();
+            var json = {};
+            $.each(array, function(){
+                json[this.name] = this.value || '';
+            });
+            json = JSON.stringify(json);
+            return json;
+        }
+
+        $(document).ready(function(){
+            $('form#adduser').bind('submit',function(event){
+                event.preventDefault();
+
+                var form = this;
+                var json = convertFormToJSON(form);
+                $.ajax({
+                    type: "POST",
+                    url:  "/jhf/api/v1.0/users",
+                    data: json,
+                    contentType: "application/json; charset=utf-8",
+                    dataType : "json",
+                    success : function() {
+                        $("p").text(json);
+                    }
+                    error: function(err) {
+                        alert(err);
+                    }
+                });
+            });
+        });
+    </script>
+  </body>
+</html>
