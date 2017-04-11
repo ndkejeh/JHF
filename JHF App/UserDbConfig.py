@@ -6,7 +6,7 @@ from dateutil.parser import parser
 app = Flask(__name__)
 #db = sqlite3.connect('clients.db') #creates a new db if it doesn't exist
 #db.close()
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:jkl64fds@localhost:3300/jhf_db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:jkl64fds@localhost:3306/jhf_db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db  = SQLAlchemy(app)
 
@@ -30,3 +30,5 @@ class referrers(db.Model):
     city = db.Column(db.String(45))
     industry = db.Column(db.String(100))
     prospects = db.relationship('prospects', backref='referrers', lazy='dynamic')
+
+db.create_all()
