@@ -1,0 +1,23 @@
+html {
+    position: relative;
+    min-height: 100%;
+    font-size: 100%; /*Important*/
+}
+
+body {
+    background-color: #ebebeb;
+}
+
+.container {
+    background-color: #fff;
+    max-width: 1200px;
+/*    min-width: 500px;*/
+    margin: auto;
+}
+
+.link {
+  padding-top: 20px;
+  padding-left: 30px;
+  padding-bottom: 60px;
+  font-size:1.5rem;
+}
