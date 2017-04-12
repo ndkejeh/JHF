@@ -48,11 +48,6 @@ def submitted():
         new_entry = prospects(request.json["FirstName"], request.json["Surname"], request.json["Retirement"])
         db.session.add(new_entry)
         db.session.commit()
-        #return "Done" #jsonify( {"New Prospect" : new_entry} ),201 #201 is HTTP code for created
-        #req = request.get_json
-        #new_entry = prospects(request.form["fname"], request.form["lname"], request.form["retirement_age"])
-        #db.session.add(new_entry)
-        #db.session.commit()
         entered = {
             "FirstName": new_entry.fname,
             "Surname": new_entry.lname,
@@ -60,7 +55,6 @@ def submitted():
             "Retirement": new_entry.retirement_age,
         }
         return jsonify(entered),201 #201 is HTTP code for created
-        #return "New Prospect Added"
     else:
         return "It's likely a GET submission!"
     #You then need the request method to access the data
