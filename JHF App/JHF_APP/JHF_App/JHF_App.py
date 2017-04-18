@@ -40,7 +40,7 @@ def adduser():
     return render_template("newprospect.html")
 
 @app.route("/jhf/api/v1.0/prospects", methods=["GET", "POST"]) #this will be the api for add user
-def submitted():
+def new_prospect():
     if request.method == 'POST':
         if not request.is_json:
             abort(400) #data sent wasn't JSON so about with an error else process
@@ -55,10 +55,28 @@ def submitted():
             "Retirement": new_entry.retirement_age,
         }
         return jsonify(entered),201 #201 is HTTP code for created
-    else:
+    else: #If it's a GET method then we could send all prospects (would rather not though!)
         return "It's likely a GET submission!"
     #You then need the request method to access the data
-    #request.form['firstname']
+
+@app.route("/jhf/api/v1.0/prospects/<int:prosp_id>", methods=["PUT"]) #The api for updating a prospect
+def update_prospect(prosp_id):
+    if prosp_id is not None:
+        update_prosp = prospects.query.get(prosp_id)
+        update_prosp.fname = request.json["FirstName"]
+        update_prosp.lname = request.json["Surname"]
+        db.session.add(update_prosp)
+        db.session.commit()
+
+    updated_prosp = {
+        "FirstName": update_prosp.fname,
+        "Surname": update_prosp.lname,
+        "DOB": update_prosp.dob,
+        "Retirement": update_prosp.retirement_age,
+    }
+    return jsonify(updated_prosp)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
