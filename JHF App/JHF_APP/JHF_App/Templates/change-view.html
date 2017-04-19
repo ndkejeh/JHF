@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Update/Delete Form</title>
+    <!--Jquery CDN-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> -->
+</head>
+
+<body>
+    <h1>Prospect Search</h1>
+    <form id="searchform" action="#override">
+        First Name:<input type="text" id="fname"> Surname: <input type="text" id="lname"> D.O.B: <input type="text" placeholder="YYY-MM-DD" id="dob"><br><br>
+        <input type="submit" value="Search">
+    </form>
+    <p id="output">Submit should run the API to add user</p>
+
+    <h2>No Prospects</h2>
+    <container style="position: relative">
+        <div style="width: 600px; display: inline">
+            <div style="width: 50%; padding-bottom: 30px">
+                <p>First Name:</p> <input type="text" id="fname2" readonly>
+                <p>D.O.B:</p> <input type="text" id="dob2" readonly>
+            </div>
+            <div style="width: 50%; display: inline; padding left: 50px">
+                <p>Surname:</p> <input type="text" id="lname2" readonly>
+                <p>Retirement:</p> <input type="text" id="ret_age2" readonly>
+            </div>
+    </container>
+    </div><br>
+
+    <button type="button" id="delete_prosp">Delete</button><br><br>
+    <button type="button" id="update_prosp">Update</button>
+    <!--introdude new fields and an update
+        button if the update buttone is pressed-->
+
+    <script>
+        $("document").ready(function() {
+            $("form#searchform").submit(function() {
+                event.preventDefault(); //Prevent the std submit from firing
+                var $fname = $("#fname").val();
+                var $lname = $("#lname").val();
+                var $dob = $("#dob").val();
+
+                var searchJson = {
+                    fname: $fname,
+                    lname: $lname,
+                    dob: $dob,
+                };
+                searchJson = JSON.stringify(searchJson);
+                $.ajax({
+                    type: "GET",
+                    url: "/jhf/api/v1.0/prospects",
+                    data: searchJson,
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(returned) {
+                        $("h2").text("Found");
+                    },
+                });
+            });
+
+            $("button#addprosp").on("click", function() {
+                var $firstname = $("#fname").val();
+                var $surname = $("#sname").val();
+                var $dob = $("#dob").val();
+                var $retirement = $("#ret_age").val();
+
+                var json = {
+                    FirstName: $firstname,
+                    Surname: $surname,
+                    Dob: $dob,
+                    Retirement: $retirement,
+                };
+                json = JSON.stringify(json);
+
+                $.ajax({
+                    type: "POST",
+                    url: "/jhf/api/v1.0/prospects",
+                    data: json,
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(data) {
+                        $("p#output").text(data);
+                        //alert("First name = " + $firstname);
+                    },
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
+
+</script>
+</body>
+
+</html>

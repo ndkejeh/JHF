@@ -18,10 +18,10 @@ class prospects(db.Model):
     retirement_age = db.Column(db.Integer)
     referrer_id = db.Column(db.Integer, db.ForeignKey('referrers.id'))
 
-    def __init__(self, fname, lname,retirement_age):
+    def __init__(self, fname, lname, dob, retirement_age):
         self.fname = fname
         self.lname = lname
-    #    self.dob = datetime.strptime(dob, "%Y-%m-%d")
+        self.dob = datetime.strptime(dob, "%Y-%m-%d").date()
         self.retirement_age = retirement_age
 
 class referrers(db.Model):
@@ -39,13 +39,18 @@ def index():
 def adduser():
     return render_template("newprospect.html")
 
+@app.route("/searchprospect")
+def searchprospect():
+    return render_template("change-view.html")
+
 @app.route("/jhf/api/v1.0/prospects", methods=["GET", "POST"]) #this will be the api for add user
 def new_prospect():
+    if not request.is_json:
+        abort(400) #data sent wasn't JSON so about with an error else process
+    #else continue
     if request.method == 'POST':
-        if not request.is_json:
-            abort(400) #data sent wasn't JSON so about with an error else process
-
-        new_entry = prospects(request.json["FirstName"], request.json["Surname"], request.json["Retirement"])
+        #use validation in the form - therefore will have to change to a form
+        new_entry = prospects(request.json["FirstName"], request.json["Surname"], request.json["Dob"], request.json["Retirement"])
         db.session.add(new_entry)
         db.session.commit()
         entered = {
@@ -55,17 +60,32 @@ def new_prospect():
             "Retirement": new_entry.retirement_age,
         }
         return jsonify(entered),201 #201 is HTTP code for created
-    else: #If it's a GET method then we could send all prospects (would rather not though!)
-        return "It's likely a GET submission!"
-    #You then need the request method to access the data
+    elif request.method == "GET":
+        target = prospects.query.filter_by(fname=request.json["fname"],
+         lname=request.json["lname"], dob=request.json["dob"]).first()
+        if not target is none: #then we have found a match
+            found = {
+                "id": target.id,
+                "fname": target.fname,
+                "lname": target.lname,
+                "dob": target.dob,
+                "retirement": target.retirement_age,
+            }
+            return jsonify(found), 200 #send back the result found inc. ID
+        else:
+            return 404 #i.e. not found
 
-@app.route("/jhf/api/v1.0/prospects/<int:prosp_id>", methods=["PUT"]) #The api for updating a prospect
+@app.route("/jhf/api/v1.0/prospects/<int:prosp_id>", methods=["PUT", "DELETE"]) #The api for updating a prospect
 def update_prospect(prosp_id):
     if prosp_id is not None:
-        update_prosp = prospects.query.get(prosp_id)
-        update_prosp.fname = request.json["FirstName"]
-        update_prosp.lname = request.json["Surname"]
-        db.session.add(update_prosp)
+        target = prospects.query.get(prosp_id)
+        if request.method =="PUT":
+            #Need to find code that checks there's something in Kwarg before equating!!
+            target.fname = request.json["FirstName"]
+            target.lname = request.json["Surname"]
+            db.session.add(target)
+        elif request.method =="DELETE":
+            db.session.delete(target)
         db.session.commit()
 
     updated_prosp = {

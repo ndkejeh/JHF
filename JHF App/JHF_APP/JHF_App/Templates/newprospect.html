@@ -1,17 +1,19 @@
 <!doctype html>
 <html>
-  <head>
+
+<head>
     <title>Users DB Form</title>
     <!--Jquery CDN-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
-  </head>
-  <body>
-      <h1>Enter a New Prospect</h1>
-            <p>First Name: <input type="text" id="fname"></p>
-            <p>Surname: <input type="text" id="sname"></p>
-            <p>D.O.B: <input type="text" placeholder="YYY-MM-DD" id="dob"></p>
-            <p>Retirement Age: <input type="text" placeholder="65?" id="ret_age"></p>
-            <button type="button" id="addprosp">Add Prospect</button>
+</head>
+
+<body>
+    <h1>Enter a New Prospect</h1>
+    <p>First Name: <input type="text" id="fname"></p>
+    <p>Surname: <input type="text" id="sname"></p>
+    <p>D.O.B: <input type="text" placeholder="YYY-MM-DD" id="dob"></p>
+    <p>Retirement Age: <input type="text" placeholder="65?" id="ret_age"></p>
+    <button type="button" id="addprosp">Add Prospect</button>
     <p id="output">Submit should run the API to add user</p>
     <script>
         $("document").ready(function() {
@@ -31,7 +33,7 @@
 
                 $.ajax({
                     type: "POST",
-                    url: "/jhf/api/v1.0/users",
+                    url: "/jhf/api/v1.0/prospects",
                     data: json,
                     contentType: "application/json; charset=UTF-8",
                     success: function(data) {
@@ -42,5 +44,6 @@
             });
         });
     </script>
-  </body>
+</body>
+
 </html>
