@@ -75,24 +75,43 @@ def new_prospect():
         else:
             return 404 #i.e. not found
 
+@app.route("/jhf/api/v1.0/prospects/find", methods=["POST"])
+def find_prospect(): #this api finds a prospect from the info posted and returns
+    if request.method == "POST":
+        target = prospects.query.filter_by(fname=request.json["fname"], dob=datetime.strptime(request.json["dob"], "%Y-%m-%d").date()).first()
+        if not target is None: #then we have found a match
+            # truncdob = datetime.strptime(target.dob, "%Y-%m-%d").date()
+            found = {
+                "id": target.id,
+                "fname": target.fname,
+                "lname": target.lname,
+                "dob": target.dob.strftime("%d/%m/%Y"),
+                "retirement": target.retirement_age,
+            }
+            return jsonify(found), 200 #send back the result found inc. ID
+        else:
+            return 404 #i.e. not found
+
+
 @app.route("/jhf/api/v1.0/prospects/<int:prosp_id>", methods=["PUT", "DELETE"]) #The api for updating a prospect
 def update_prospect(prosp_id):
     if prosp_id is not None:
         target = prospects.query.get(prosp_id)
         if request.method =="PUT":
             #Need to find code that checks there's something in Kwarg before equating!!
-            target.fname = request.json["FirstName"]
-            target.lname = request.json["Surname"]
+            target.fname = request.json["fname"]
+            target.lname = request.json["lname"]
             db.session.add(target)
         elif request.method =="DELETE":
             db.session.delete(target)
         db.session.commit()
 
     updated_prosp = {
-        "FirstName": update_prosp.fname,
-        "Surname": update_prosp.lname,
-        "DOB": update_prosp.dob,
-        "Retirement": update_prosp.retirement_age,
+        "fname": target.fname,
+        "lname": target.lname,
+        "dob": target.dob,
+        "Retirement": target.retirement_age,
+        "status": "201", #success created HTML status code
     }
     return jsonify(updated_prosp)
 

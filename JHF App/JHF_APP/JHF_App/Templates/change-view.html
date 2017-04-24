@@ -20,12 +20,13 @@
     <container style="position: relative">
         <div style="width: 600px; display: inline">
             <div style="width: 50%; padding-bottom: 30px">
-                <p>First Name:</p> <input type="text" id="fname2" readonly>
-                <p>D.O.B:</p> <input type="text" id="dob2" readonly>
+                <p>ID:</p> <input type="text" id="id2" readonly>
+                <p>First Name:</p> <input type="text" id="fname2" class="update_inputs" readonly>
+                <p>D.O.B:</p> <input type="text" id="dob2" class="update_inputs" readonly>
             </div>
             <div style="width: 50%; display: inline; padding left: 50px">
-                <p>Surname:</p> <input type="text" id="lname2" readonly>
-                <p>Retirement:</p> <input type="text" id="ret_age2" readonly>
+                <p>Surname:</p> <input type="text" id="lname2" class="update_inputs" readonly>
+                <p>Retirement:</p> <input type="text" id="ret_age2" class="update_inputs" readonly>
             </div>
     </container>
     </div><br>
@@ -33,10 +34,48 @@
     <button type="button" id="delete_prosp">Delete</button><br><br>
     <button type="button" id="update_prosp">Update</button>
     <!--introdude new fields and an update
-        button if the update buttone is pressed-->
+        button if the update button is pressed-->
 
     <script>
         $("document").ready(function() {
+            $("#update_prosp").on("click", function() {
+                if ($("#id2").val != null && $("#update_prosp").text() == "Update") {
+                    $("input.update_inputs").prop("readonly", false);
+                    $("#update_prosp").text("Update Now");
+                } else if ($("#update_prosp").text() == "Update Now") {
+                    //then make an ajax call to update
+                    var $fname = $("#fname2").val();
+                    var $lname = $("#lname2").val();
+                    var $dob = $("#dob2").val();
+                    var $retirement = $("#ret_age2").val();
+
+                    var updateJson = {
+                        fname: $fname,
+                        lname: $lname,
+                        dob: $dob,
+                        retirement: $retirement,
+                    };
+                    updateJson = JSON.stringify(updateJson);
+                    $.ajax({
+                        type: "PUT",
+                        url: "/jhf/api/v1.0/prospects/" + $("#id2").val(), //include ID in the URL
+                        data: updateJson,
+                        contentType: "application/json; charset=UTF-8",
+                        success: function(data) {
+                            if (data.status == 201) {
+                                //then successful update - clear boxes and make read-only
+                                $("h2").text("Prospect Updated");
+                                $("input.update_inputs").prop("readonly", true);
+                                $("#id2").val("");
+                                $("#fname2").val("");
+                                $("#lname2").val("");
+                                $("#dob2").val("");
+                                $("#ret_age2").val("");
+                            }
+                        },
+                    });
+                }
+            });
             $("form#searchform").submit(function() {
                 event.preventDefault(); //Prevent the std submit from firing
                 var $fname = $("#fname").val();
@@ -50,12 +89,18 @@
                 };
                 searchJson = JSON.stringify(searchJson);
                 $.ajax({
-                    type: "GET",
-                    url: "/jhf/api/v1.0/prospects",
+                    type: "POST",
+                    url: "/jhf/api/v1.0/prospects/find",
                     data: searchJson,
                     contentType: "application/json; charset=UTF-8",
                     success: function(returned) {
-                        $("h2").text("Found");
+                        // will return a JSON object with the found prospect
+                        $("h2").text("Prospect Found | Update/Delete?");
+                        $("#id2").val(returned.id);
+                        $("#fname2").val(returned.fname);
+                        $("#lname2").val(returned.lname);
+                        $("#dob2").val(returned.dob);
+                        $("#ret_age2").val(returned.retirement);
                     },
                 });
             });
