@@ -21,8 +21,15 @@ class prospects(db.Model):
     def __init__(self, fname, lname, dob, retirement_age):
         self.fname = fname
         self.lname = lname
-        self.dob = datetime.strptime(dob, "%Y-%m-%d").date()
+        self.dob = datetime.strptime(dob, "%d/%m/%Y").date()
         self.retirement_age = retirement_age
+
+    # def update(self, **kwargs):
+    #     for count, updateKey in enumerate(kwargs):
+    #         self.updateKey = kwargs[updateKey]
+    #     db.session.add(self)
+    #     db.session.commit()
+    #     return self
 
 class referrers(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -30,6 +37,14 @@ class referrers(db.Model):
     city = db.Column(db.String(45))
     industry = db.Column(db.String(100))
     prospects = db.relationship('prospects', backref='referrers', lazy='dynamic')
+
+def dateFormat(badDate):
+    #takes a null or a date passed in the %d/%m/%Y format
+    if badDate == "": #then send back without format
+        return ""
+    else:
+        goodDate = datetime.strptime(badDate, "%d/%m/%Y").date()
+        return(goodDate)
 
 @app.route("/")
 def index():
@@ -78,15 +93,22 @@ def new_prospect():
 @app.route("/jhf/api/v1.0/prospects/find", methods=["POST"])
 def find_prospect(): #this api finds a prospect from the info posted and returns
     if request.method == "POST":
-        target = prospects.query.filter_by(fname=request.json["fname"], dob=datetime.strptime(request.json["dob"], "%Y-%m-%d").date()).first()
+        if "dob" in request.json and request.json["dob"] is not "": #then format it ahead of time
+            request.json["dob"] = datetime.strptime(request.json["dob"], "%d/%m/%Y").date()
+        #Now make an array where we keep only the sent search strings
+        searchFields = {} #empty dictionary
+        for searchKeys in request.json: #make a dict of actual included search strings
+            if request.json[searchKeys] is not "":
+                searchFields[searchKeys] = request.json[searchKeys]
+        target = prospects.query.filter_by(**searchFields).first()
         if not target is None: #then we have found a match
             # truncdob = datetime.strptime(target.dob, "%Y-%m-%d").date()
             found = {
                 "id": target.id,
                 "fname": target.fname,
                 "lname": target.lname,
-                "dob": target.dob.strftime("%d/%m/%Y"),
-                "retirement": target.retirement_age,
+                "dob": dateFormat(getattr(target,"dob")),
+                "retirement_age": target.retirement_age,
             }
             return jsonify(found), 200 #send back the result found inc. ID
         else:
@@ -99,8 +121,10 @@ def update_prospect(prosp_id):
         target = prospects.query.get(prosp_id)
         if request.method =="PUT":
             #Need to find code that checks there's something in Kwarg before equating!!
-            target.fname = request.json["fname"]
-            target.lname = request.json["lname"]
+            for updateKey in request.json:
+                if updateKey == "dob": #then we have to condition the entry
+                    request.json[updateKey] = datetime.strptime(request.json[updateKey], "%d/%m/%Y").date()
+                setattr(target, updateKey, request.json[updateKey])
             db.session.add(target)
         elif request.method =="DELETE":
             db.session.delete(target)
@@ -109,8 +133,8 @@ def update_prospect(prosp_id):
     updated_prosp = {
         "fname": target.fname,
         "lname": target.lname,
-        "dob": target.dob,
-        "Retirement": target.retirement_age,
+        "dob": target.dob.strftime("%d/%m/%Y"),
+        "retirement_age": target.retirement_age,
         "status": "201", #success created HTML status code
     }
     return jsonify(updated_prosp)

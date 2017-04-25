@@ -10,8 +10,8 @@
 
 <body>
     <h1>Prospect Search</h1>
-    <form id="searchform" action="#override">
-        First Name:<input type="text" id="fname"> Surname: <input type="text" id="lname"> D.O.B: <input type="text" placeholder="YYY-MM-DD" id="dob"><br><br>
+    <form id="searchform">
+        First Name:<input type="text" id="fname"> Surname: <input type="text" id="lname"> D.O.B: <input type="text" placeholder="DD/MM/YYYY" id="dob"><br><br>
         <input type="submit" value="Search">
     </form>
     <p id="output">Submit should run the API to add user</p>
@@ -42,6 +42,7 @@
                 if ($("#id2").val != null && $("#update_prosp").text() == "Update") {
                     $("input.update_inputs").prop("readonly", false);
                     $("#update_prosp").text("Update Now");
+                    $("#delete_prosp").hide();
                 } else if ($("#update_prosp").text() == "Update Now") {
                     //then make an ajax call to update
                     var $fname = $("#fname2").val();
@@ -53,7 +54,7 @@
                         fname: $fname,
                         lname: $lname,
                         dob: $dob,
-                        retirement: $retirement,
+                        retirement_age: $retirement,
                     };
                     updateJson = JSON.stringify(updateJson);
                     $.ajax({
@@ -71,6 +72,8 @@
                                 $("#lname2").val("");
                                 $("#dob2").val("");
                                 $("#ret_age2").val("");
+                                $("#update_prosp").text("Update");
+                                $("#delete_prosp").removeAttr();
                             }
                         },
                     });
@@ -100,7 +103,7 @@
                         $("#fname2").val(returned.fname);
                         $("#lname2").val(returned.lname);
                         $("#dob2").val(returned.dob);
-                        $("#ret_age2").val(returned.retirement);
+                        $("#ret_age2").val(returned.retirement_age);
                     },
                 });
             });
@@ -112,10 +115,10 @@
                 var $retirement = $("#ret_age").val();
 
                 var json = {
-                    FirstName: $firstname,
-                    Surname: $surname,
-                    Dob: $dob,
-                    Retirement: $retirement,
+                    fname: $firstname,
+                    lname: $surname,
+                    dob: $dob,
+                    retirement_age: $retirement,
                 };
                 json = JSON.stringify(json);
 
