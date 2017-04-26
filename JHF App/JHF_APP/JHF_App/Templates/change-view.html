@@ -14,9 +14,9 @@
         First Name:<input type="text" id="fname"> Surname: <input type="text" id="lname"> D.O.B: <input type="text" placeholder="DD/MM/YYYY" id="dob"><br><br>
         <input type="submit" value="Search">
     </form>
-    <p id="output">Submit should run the API to add user</p>
+    <p id="output">Enter some or all of the prospect's details and click search</p>
 
-    <h2>No Prospects</h2>
+    <h2>Prospects Fields</h2>
     <container style="position: relative">
         <div style="width: 600px; display: inline">
             <div style="width: 50%; padding-bottom: 30px">
@@ -30,6 +30,8 @@
             </div>
     </container>
     </div><br>
+    <br>
+    <p id="status" style="color: #b24026"></p>
 
     <button type="button" id="delete_prosp">Delete</button><br><br>
     <button type="button" id="update_prosp">Update</button>
@@ -38,11 +40,24 @@
 
     <script>
         $("document").ready(function() {
+            function resetAll() {
+                $("input.update_inputs").prop("readonly", true);
+                $("#id2").val("");
+                $("#fname2").val("");
+                $("#lname2").val("");
+                $("#dob2").val("");
+                $("#ret_age2").val("");
+                $("#update_prosp").text("Update");
+                $("#delete_prosp").removeAttr("style");
+                $("h2").text("Prospect Fields");
+                $("p#output").text("Enter some or all of the prospect's details and click search");
+            }
+            //THE UPDATE FUNCTION
             $("#update_prosp").on("click", function() {
-                if ($("#id2").val != null && $("#update_prosp").text() == "Update") {
+                if ($("#id2").val().length != 0 && $("#update_prosp").text() == "Update") {
                     $("input.update_inputs").prop("readonly", false);
                     $("#update_prosp").text("Update Now");
-                    $("#delete_prosp").hide();
+                    $("#delete_prosp").css("display", "None");
                 } else if ($("#update_prosp").text() == "Update Now") {
                     //then make an ajax call to update
                     var $fname = $("#fname2").val();
@@ -62,50 +77,78 @@
                         url: "/jhf/api/v1.0/prospects/" + $("#id2").val(), //include ID in the URL
                         data: updateJson,
                         contentType: "application/json; charset=UTF-8",
-                        success: function(data) {
-                            if (data.status == 201) {
+                        success: function(returned) {
+                            if (returned.status == 201) {
                                 //then successful update - clear boxes and make read-only
-                                $("h2").text("Prospect Updated");
-                                $("input.update_inputs").prop("readonly", true);
-                                $("#id2").val("");
-                                $("#fname2").val("");
-                                $("#lname2").val("");
-                                $("#dob2").val("");
-                                $("#ret_age2").val("");
-                                $("#update_prosp").text("Update");
-                                $("#delete_prosp").removeAttr();
+                                $("p#status").text("Prospect Updated");
+                                resetAll();
                             }
                         },
                     });
                 }
             });
+            //THE DELETE FUNCTION
+            $("#delete_prosp").on("click", function() {
+                if ($("#id2").val().length != 0) {
+                    var delConfirm = confirm("Are you sure you want to delete " + $("#fname2").val() + " " + $("#lname2").val());
+                    if (delConfirm == true) {
+                        //ajax call to delete api
+                        $.ajax({
+                            type: "DELETE",
+                            url: "/jhf/api/v1.0/prospects/" + $("#id2").val(), //include ID in the URL
+                            contentType: "application/json; charset=UTF-8",
+                            success: function(returned) {
+                                if (returned.status == 204) { //then successfully deleted
+                                    $("p#status").text("Prospect deleted");
+                                    resetAll();
+                                }
+                            },
+                        });
+                    }
+                }
+            });
+            //THE SEARCH FUNCTION
             $("form#searchform").submit(function() {
                 event.preventDefault(); //Prevent the std submit from firing
-                var $fname = $("#fname").val();
-                var $lname = $("#lname").val();
-                var $dob = $("#dob").val();
+                //alert($("#fname").val());
+                if ($("#fname").val().length != 0) {
+                    var $fname = $("#fname").val();
+                    var $lname = $("#lname").val();
+                    var $dob = $("#dob").val();
 
-                var searchJson = {
-                    fname: $fname,
-                    lname: $lname,
-                    dob: $dob,
-                };
-                searchJson = JSON.stringify(searchJson);
-                $.ajax({
-                    type: "POST",
-                    url: "/jhf/api/v1.0/prospects/find",
-                    data: searchJson,
-                    contentType: "application/json; charset=UTF-8",
-                    success: function(returned) {
-                        // will return a JSON object with the found prospect
-                        $("h2").text("Prospect Found | Update/Delete?");
-                        $("#id2").val(returned.id);
-                        $("#fname2").val(returned.fname);
-                        $("#lname2").val(returned.lname);
-                        $("#dob2").val(returned.dob);
-                        $("#ret_age2").val(returned.retirement_age);
-                    },
-                });
+                    var searchJson = {
+                        fname: $fname,
+                        lname: $lname,
+                        dob: $dob,
+                    };
+                    searchJson = JSON.stringify(searchJson);
+                    $.ajax({
+                        type: "POST",
+                        url: "/jhf/api/v1.0/prospects/find",
+                        data: searchJson,
+                        contentType: "application/json; charset=UTF-8",
+                        success: function(returned) {
+                            if (returned.status == "200") {
+                                // will return a JSON object with the found prospect
+                                $("h2").text("Prospect Found | Update/Delete?");
+                                $("#id2").val(returned.id);
+                                $("#fname2").val(returned.fname);
+                                $("#lname2").val(returned.lname);
+                                $("#dob2").val(returned.dob);
+                                $("#ret_age2").val(returned.retirement_age);
+                            } else { //Not found
+                                $("p#status").text("Prospect Not Found");
+                            }
+                        },
+                        error: function(returned) {
+                            if (returned.status == "404") {
+                                $("p#status").text("Prospect Not Found");
+                            }
+                        };
+                    });
+                } else {
+                    alert("Please enter at least a prospect name");
+                }
             });
 
             $("button#addprosp").on("click", function() {

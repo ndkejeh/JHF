@@ -11,23 +11,24 @@
     <h1>Enter a New Prospect</h1>
     <p>First Name: <input type="text" id="fname"></p>
     <p>Surname: <input type="text" id="sname"></p>
-    <p>D.O.B: <input type="text" placeholder="YYY-MM-DD" id="dob"></p>
+    <p>D.O.B: <input type="text" placeholder="DD/MM/YYYY" id="dob"></p>
     <p>Retirement Age: <input type="text" placeholder="65?" id="ret_age"></p>
     <button type="button" id="addprosp">Add Prospect</button>
-    <p id="output">Submit should run the API to add user</p>
+    <p id="output">Submit should run the API to add user</p><br>
+    <a href="/">Back</a>
     <script>
         $("document").ready(function() {
             $("button#addprosp").on("click", function() {
-                var $firstname = $("#fname").val();
-                var $surname = $("#sname").val();
+                var $fname = $("#fname").val();
+                var $lname = $("#sname").val();
                 var $dob = $("#dob").val();
-                var $retirement = $("#ret_age").val();
+                var $retirement_age = $("#ret_age").val();
 
                 var json = {
-                    FirstName: $firstname,
-                    Surname: $surname,
-                    Dob: $dob,
-                    Retirement: $retirement,
+                    fname: $fname,
+                    lname: $lname,
+                    dob: $dob,
+                    retirement_age: $retirement_age,
                 };
                 json = JSON.stringify(json);
 
@@ -36,9 +37,10 @@
                     url: "/jhf/api/v1.0/prospects",
                     data: json,
                     contentType: "application/json; charset=UTF-8",
-                    success: function(data) {
-                        $("p#output").text(data);
-                        //alert("First name = " + $firstname);
+                    success: function(returned) {
+                        if (returned.status == 201) { //then it was created
+                            $("p#output").text("Prospect " + returned.fname + " " + returned.lname + " was created");
+                        }
                     },
                 });
             });

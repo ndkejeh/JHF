@@ -18,18 +18,12 @@ class prospects(db.Model):
     retirement_age = db.Column(db.Integer)
     referrer_id = db.Column(db.Integer, db.ForeignKey('referrers.id'))
 
-    def __init__(self, fname, lname, dob, retirement_age):
-        self.fname = fname
-        self.lname = lname
-        self.dob = datetime.strptime(dob, "%d/%m/%Y").date()
-        self.retirement_age = retirement_age
-
-    # def update(self, **kwargs):
-    #     for count, updateKey in enumerate(kwargs):
-    #         self.updateKey = kwargs[updateKey]
-    #     db.session.add(self)
-    #     db.session.commit()
-    #     return self
+    def __init__(self, **kwargs): #the initial method on create a prospect instance
+        for newData in kwargs:
+            if kwargs[newData] is not "":
+                if newData == "dob": #then format date for input
+                    kwargs[newData] = datetime.strptime(kwargs[newData], "%d/%m/%Y").date()
+                setattr(self, newData, kwargs[newData])
 
 class referrers(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -40,10 +34,10 @@ class referrers(db.Model):
 
 def dateFormat(badDate):
     #takes a null or a date passed in the %d/%m/%Y format
-    if badDate == "": #then send back without format
-        return ""
+    if badDate is None: #then send back without format
+        return None
     else:
-        goodDate = datetime.strptime(badDate, "%d/%m/%Y").date()
+        goodDate = badDate.strftime("%d/%m/%Y")
         return(goodDate)
 
 @app.route("/")
@@ -65,34 +59,37 @@ def new_prospect():
     #else continue
     if request.method == 'POST':
         #use validation in the form - therefore will have to change to a form
-        new_entry = prospects(request.json["FirstName"], request.json["Surname"], request.json["Dob"], request.json["Retirement"])
+        #new_entry = prospects(request.json["fname"], request.json["lname"], request.json["dob"], request.json["retirement_age"])
+        new_entry = prospects(**request.json)
         db.session.add(new_entry)
         db.session.commit()
         entered = {
-            "FirstName": new_entry.fname,
-            "Surname": new_entry.lname,
-            "DOB": new_entry.dob,
-            "Retirement": new_entry.retirement_age,
+            "fname": new_entry.fname,
+            "lname": new_entry.lname,
+            "dob": new_entry.dob,
+            "retirement_age": new_entry.retirement_age,
+            "status": "201", #201 is HTTP code for created
         }
-        return jsonify(entered),201 #201 is HTTP code for created
-    elif request.method == "GET":
-        target = prospects.query.filter_by(fname=request.json["fname"],
-         lname=request.json["lname"], dob=request.json["dob"]).first()
-        if not target is none: #then we have found a match
-            found = {
-                "id": target.id,
-                "fname": target.fname,
-                "lname": target.lname,
-                "dob": target.dob,
-                "retirement": target.retirement_age,
-            }
-            return jsonify(found), 200 #send back the result found inc. ID
-        else:
-            return 404 #i.e. not found
+        return jsonify(entered),201
+    # elif request.method == "GET": #delete this, don't let a search happen over GET
+    #     target = prospects.query.filter_by(fname=request.json["fname"],
+    #      lname=request.json["lname"], dob=request.json["dob"]).first()
+    #     if not target is None: #then we have found a match
+    #         found = {
+    #             "id": target.id,
+    #             "fname": target.fname,
+    #             "lname": target.lname,
+    #             "dob": target.dob,
+    #             "retirement": target.retirement_age,
+    #         }
+    #         return jsonify(found), 200 #send back the result found inc. ID
+    #     else:
+    #         return 404 #i.e. not found
 
 @app.route("/jhf/api/v1.0/prospects/find", methods=["POST"])
 def find_prospect(): #this api finds a prospect from the info posted and returns
     if request.method == "POST":
+        found = {} #empty dictionary for response
         if "dob" in request.json and request.json["dob"] is not "": #then format it ahead of time
             request.json["dob"] = datetime.strptime(request.json["dob"], "%d/%m/%Y").date()
         #Now make an array where we keep only the sent search strings
@@ -101,43 +98,71 @@ def find_prospect(): #this api finds a prospect from the info posted and returns
             if request.json[searchKeys] is not "":
                 searchFields[searchKeys] = request.json[searchKeys]
         target = prospects.query.filter_by(**searchFields).first()
-        if not target is None: #then we have found a match
+        if target is not None: #then we have found a match
             # truncdob = datetime.strptime(target.dob, "%Y-%m-%d").date()
+            # for fieldKeys in target:
+            #     found[fieldKeys] = getattr(target, fieldKeys)
+            statusCode = "200"
+            # searchStatus = "Found"
             found = {
                 "id": target.id,
                 "fname": target.fname,
                 "lname": target.lname,
                 "dob": dateFormat(getattr(target,"dob")),
                 "retirement_age": target.retirement_age,
+                "status": "200",
+                "response": "Found",
             }
-            return jsonify(found), 200 #send back the result found inc. ID
+            #return jsonify(found), 200 #send back the result found inc. ID
         else:
-            return 404 #i.e. not found
+            statusCode = "404"
+            # searchStatus = "Not Found"
+            found = {
+                "id": "",
+                "fname": "",
+                "lname": "",
+                "dob": "",
+                "retirement_age": "",
+                "status": "404",
+                "response": "Not Found",
+            }
+        # found["status"] = status
+        # found["response"] = searchStatus
+        return jsonify(found), statusCode
+        #return ("Prospect Not Found"), 404 #i.e. not found
 
 
 @app.route("/jhf/api/v1.0/prospects/<int:prosp_id>", methods=["PUT", "DELETE"]) #The api for updating a prospect
 def update_prospect(prosp_id):
     if prosp_id is not None:
         target = prospects.query.get(prosp_id)
-        if request.method =="PUT":
+        if request.method == "DELETE": #delete the prospect and leave
+            db.session.delete(target)
+            returnCode = "204" #i.e. success delete (no content)
+            action = "Deleted"
+        elif request.method == "PUT":
             #Need to find code that checks there's something in Kwarg before equating!!
             for updateKey in request.json:
                 if updateKey == "dob": #then we have to condition the entry
                     request.json[updateKey] = datetime.strptime(request.json[updateKey], "%d/%m/%Y").date()
                 setattr(target, updateKey, request.json[updateKey])
             db.session.add(target)
-        elif request.method =="DELETE":
-            db.session.delete(target)
+            returnCode = "201" #success created HTML status code
+            action = "Updated"
+        else:
+            abort(400) #exit with bad code as not PUT or DELETE
+        #Return preparation
+        updated_prosp = {
+            "fname": target.fname,
+            "lname": target.lname,
+            "dob": dateFormat(getattr(target,"dob")),
+            "retirement_age": target.retirement_age,
+            "status": returnCode,
+            "action": action,
+        }
         db.session.commit()
+        return jsonify(updated_prosp)
 
-    updated_prosp = {
-        "fname": target.fname,
-        "lname": target.lname,
-        "dob": target.dob.strftime("%d/%m/%Y"),
-        "retirement_age": target.retirement_age,
-        "status": "201", #success created HTML status code
-    }
-    return jsonify(updated_prosp)
 
 
 
