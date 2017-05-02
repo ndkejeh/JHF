@@ -40,6 +40,8 @@
 
     <script>
         $("document").ready(function() {
+            alert("Hiya");
+
             function resetAll() {
                 $("input.update_inputs").prop("readonly", true);
                 $("#id2").val("");
@@ -144,7 +146,7 @@
                             if (returned.status == "404") {
                                 $("p#status").text("Prospect Not Found");
                             }
-                        };
+                        },
                     });
                 } else {
                     alert("Please enter at least a prospect name");

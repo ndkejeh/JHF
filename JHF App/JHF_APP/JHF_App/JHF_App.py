@@ -89,7 +89,7 @@ def new_prospect():
 @app.route("/jhf/api/v1.0/prospects/find", methods=["POST"])
 def find_prospect(): #this api finds a prospect from the info posted and returns
     if request.method == "POST":
-        found = {} #empty dictionary for response
+        #found = {} #empty dictionary for response
         if "dob" in request.json and request.json["dob"] is not "": #then format it ahead of time
             request.json["dob"] = datetime.strptime(request.json["dob"], "%d/%m/%Y").date()
         #Now make an array where we keep only the sent search strings
@@ -100,10 +100,13 @@ def find_prospect(): #this api finds a prospect from the info posted and returns
         target = prospects.query.filter_by(**searchFields).first()
         if target is not None: #then we have found a match
             # truncdob = datetime.strptime(target.dob, "%Y-%m-%d").date()
-            # for fieldKeys in target:
-            #     found[fieldKeys] = getattr(target, fieldKeys)
+            #found = {}
             statusCode = "200"
+            #now get the attributes of the target query object
+            #fieldKeys = [attr for attr in dir(target) if not callable(getattr(target, attr)) and not attr.startswith("__") and not attr.startswith("_")]
             # searchStatus = "Found"
+            # for q, fieldKeys in enumerate(target):
+            #      found[fieldKeys] = target[fieldKeys] #getattr(target, fieldKeys)
             found = {
                 "id": target.id,
                 "fname": target.fname,
@@ -126,10 +129,7 @@ def find_prospect(): #this api finds a prospect from the info posted and returns
                 "status": "404",
                 "response": "Not Found",
             }
-        # found["status"] = status
-        # found["response"] = searchStatus
         return jsonify(found), statusCode
-        #return ("Prospect Not Found"), 404 #i.e. not found
 
 
 @app.route("/jhf/api/v1.0/prospects/<int:prosp_id>", methods=["PUT", "DELETE"]) #The api for updating a prospect
