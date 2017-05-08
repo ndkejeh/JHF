@@ -1,3 +1,18 @@
+/***Initial reset of all html tags - this removes the annoying default whitespace at the top of the page ****/
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, caption {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    background: transparent;
+}
+
+h1 {
+    padding: 0;
+}
+
 html {
     position: relative;
     min-height: 100%;
@@ -22,7 +37,51 @@ body {
   font-size:1.5rem;
 }
 
+.nopadding { /***important for proper grid layout!!**/
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
 /*
 .struct {
     padding-bottom: 50px;
 }*/
+
+.std-padding-top {
+    padding-top: 30px;
+}
+
+.body-text {
+    font-size: .9rem;
+}
+
+.input-btn-gold {
+    border: 2px solid #E2C675;
+    background-color: #fff;
+    color: #E2C675;
+    font: 300 1rem verdana;
+    width: 70px;
+}
+
+.input-btn-grey {
+    border: 2px solid #b2b2b2;
+    background-color: #fff;
+    color: #b2b2b2;
+    font: 300 1rem verdana;
+/*    width: 70px;*/
+}
+
+.dbl-padding-top {
+    padding-top: 60px;
+}
+
+#found {
+    /*display: none;*/
+}
+
+.input-btn-neg {
+     border: 2px solid #76989B;
+    background-color: #fff;
+    color: #76989B;
+    font: 300 1rem verdana;
+}

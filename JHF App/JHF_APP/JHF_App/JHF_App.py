@@ -9,13 +9,84 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:jkl64fds@localhost:3306/jh
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db  = SQLAlchemy(app)
 
+class contributions(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    amount = db.Column(db.Numeric(15,2))
+    ctype = db.Column(db.String(11), nullable=False)
+    cto = db.Column(db.String(10), nullable=False)
+    prospect_id = db.Column(db.Integer, db.ForeignKey('prospects.id'))
+
+    def __init__(self, **kwargs):
+        for newData in kwargs:
+            if kwargs[newData] is not "":
+                setattr(self, newData, kwargs[newData])
+
+class notes(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    note = db.Column(db.Text)
+    ntype = db.Column(db.String(7))
+    prospect_id = db.Column(db.Integer, db.ForeignKey('prospects.id'))
+
+    def __init__(self, **kwargs):
+        for newData in kwargs:
+            if kwargs[newData] is "" and newData == "ntype":
+                setattr(self,newData, "Private")
+            else:
+                setattr(self, newData, kwargs[newData])
+
+class expenditures(db.Model): #has a one-to-one relationship with prospects
+    id = db.Column(db.Integer, primary_key=True)
+    currentspend = db.Column(db.Numeric(15,2), nullable=False)
+    goldenspend = db.Column(db.Numeric(15,2), nullable=False)
+    prospect_id = db.Column(db.Integer, db.ForeignKey('prospects.id'))
+
+    def __init__(self, **kwargs):
+        for newData in kwargs:
+            if kwargs[newData] is not "":
+                setattr(self, newData, kwargs[newData])
+
+class assets(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    value = db.Column(db.Numeric(15,2))
+    atype = db.Column(db.String(10), nullable=False)
+    prospect_id = db.Column(db.Integer, db.ForeignKey('prospects.id'))
+
+    def __init__(self, **kwargs):
+        for newData in kwargs:
+            if kwargs[newData] is "" and newData == "atype":
+                setattr(self,newData, "Pension")
+            else:
+                setattr(self, newData, kwargs[newData])
+
+class interests(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    interest = db.Column(db.String(18))
+    itype = db.Column(db.String(8), nullable=False)
+    prospect_id = db.Column(db.Integer, db.ForeignKey('prospects.id'))
+
+    def __init__(self, **kwargs):
+        for newData in kwargs:
+            if kwargs[newData] is "" and newData == "itype":
+                setattr(self,newData, "Service")
+            else:
+                setattr(self, newData, kwargs[newData])
+
 class prospects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fname = db.Column(db.String(45))
     lname = db.Column(db.String(45))
     dob = db.Column(db.Date)
     retirement_age = db.Column(db.Integer)
+    #These are the parent relationships below
     referrer_id = db.Column(db.Integer, db.ForeignKey('referrers.id'))
+    #These are the one-to-one relationships below
+    expenditures = db.relationship('expenditures', backref='prospects',uselist=False)
+    #These are the one-to-many relationships below
+    constributions = db.relationship('contributions', backref='prospects', lazy='dynamic')
+    notes = db.relationship('notes', backref='prospects', lazy='dynamic')
+    assets = db.relationship('assets', backref='prospects', lazy='dynamic')
+    interests = db.relationship('interests', backref='prospects', lazy='dynamic')
 
     def __init__(self, **kwargs): #the initial method on create a prospect instance
         for newData in kwargs:
@@ -51,7 +122,11 @@ def adduser():
 def searchprospect():
     return render_template("change-view.html")
 
-@app.route("/jhf/api/v1.0/prospects", methods=["GET", "POST"]) #this will be the api for add user
+@app.route("/goldennumber")
+def goldennumber():
+    return render_template("goldennumber.html")
+
+@app.route("/jhf/api/v1.0/prospects", methods=["POST"]) #this will be the api for add user
 def new_prospect():
     if not request.is_json:
         abort(400) #data sent wasn't JSON so about with an error else process
@@ -70,23 +145,10 @@ def new_prospect():
             "status": "201", #201 is HTTP code for created
         }
         return jsonify(entered),201
-    # elif request.method == "GET": #delete this, don't let a search happen over GET
-    #     target = prospects.query.filter_by(fname=request.json["fname"],
-    #      lname=request.json["lname"], dob=request.json["dob"]).first()
-    #     if not target is None: #then we have found a match
-    #         found = {
-    #             "id": target.id,
-    #             "fname": target.fname,
-    #             "lname": target.lname,
-    #             "dob": target.dob,
-    #             "retirement": target.retirement_age,
-    #         }
-    #         return jsonify(found), 200 #send back the result found inc. ID
-    #     else:
-    #         return 404 #i.e. not found
 
 @app.route("/jhf/api/v1.0/prospects/find", methods=["POST"])
-def find_prospect(): #this api finds a prospect from the info posted and returns
+#THE API FOR RETURNINIG MULTIPLE RESULTS OF A QUERY - THE ONE BELOW CONSTRAINS RESULTS TO ONE!
+def find_prospects(): #this api finds a prospect from the info posted and returns
     if request.method == "POST":
         #found = {} #empty dictionary for response
         if "dob" in request.json and request.json["dob"] is not "": #then format it ahead of time
@@ -94,42 +156,55 @@ def find_prospect(): #this api finds a prospect from the info posted and returns
         #Now make an array where we keep only the sent search strings
         searchFields = {} #empty dictionary
         for searchKeys in request.json: #make a dict of actual included search strings
-            if request.json[searchKeys] is not "":
+            if request.json[searchKeys] is not "" and searchKeys != "find":
                 searchFields[searchKeys] = request.json[searchKeys]
-        target = prospects.query.filter_by(**searchFields).first()
-        if target is not None: #then we have found a match
-            # truncdob = datetime.strptime(target.dob, "%Y-%m-%d").date()
-            #found = {}
-            statusCode = "200"
-            #now get the attributes of the target query object
-            #fieldKeys = [attr for attr in dir(target) if not callable(getattr(target, attr)) and not attr.startswith("__") and not attr.startswith("_")]
-            # searchStatus = "Found"
-            # for q, fieldKeys in enumerate(target):
-            #      found[fieldKeys] = target[fieldKeys] #getattr(target, fieldKeys)
-            found = {
-                "id": target.id,
-                "fname": target.fname,
-                "lname": target.lname,
-                "dob": dateFormat(getattr(target,"dob")),
-                "retirement_age": target.retirement_age,
+        target = prospects.query.filter_by(**searchFields).all()
+        #check if target is a list of objects or just a single object (single result)
+        if isinstance(target, list) and request.json["find"] != 1:
+            #then there are multiple results andour default is for user to take all results unless indicate 1
+            multResult = []
+            for x in range(len(target)):
+                singleTarget = target.pop(0) #take out head object in the list
+                scalarFound = {
+                    "id": singleTarget.id,
+                    "fname": singleTarget.fname,
+                    "lname": singleTarget.lname,
+                    "dob": dateFormat(getattr(singleTarget,"dob")),
+                    "retirement_age": singleTarget.retirement_age,
+                }
+                multResult.append(scalarFound)
+            #And now make return string
+            foundResponse = {
+                "queryList": multResult,
+                "length": x+1,
                 "status": "200",
                 "response": "Found",
             }
-            #return jsonify(found), 200 #send back the result found inc. ID
+            return jsonify(foundResponse), 200
+        elif target is not None: #then something has been found but only return first result
+            targetScalar = prospects.query.filter_by(**searchFields).first()
+            foundResponse = {
+                "id": targetScalar.id,
+                "fname": targetScalar.fname,
+                "lname": targetScalar.lname,
+                "dob": dateFormat(getattr(targetScalar,"dob")),
+                "retirement_age": targetScalar.retirement_age,
+                "status": "200",
+                "response": "Found",
+            }
+            return jsonify(foundResponse), 200
         else:
-            statusCode = "404"
             # searchStatus = "Not Found"
-            found = {
-                "id": "",
-                "fname": "",
-                "lname": "",
-                "dob": "",
-                "retirement_age": "",
+            foundResponse = {
+                "id": None,
+                "fname": None,
+                "lname": None,
+                "dob": None,
+                "retirement_age": None,
                 "status": "404",
                 "response": "Not Found",
             }
-        return jsonify(found), statusCode
-
+            return jsonify(foundResponse), 404
 
 @app.route("/jhf/api/v1.0/prospects/<int:prosp_id>", methods=["PUT", "DELETE"]) #The api for updating a prospect
 def update_prospect(prosp_id):

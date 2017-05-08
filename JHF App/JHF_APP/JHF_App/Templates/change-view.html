@@ -40,8 +40,6 @@
 
     <script>
         $("document").ready(function() {
-            alert("Hiya");
-
             function resetAll() {
                 $("input.update_inputs").prop("readonly", true);
                 $("#id2").val("");
@@ -122,6 +120,7 @@
                         fname: $fname,
                         lname: $lname,
                         dob: $dob,
+                        find: 1,
                     };
                     searchJson = JSON.stringify(searchJson);
                     $.ajax({
@@ -138,8 +137,6 @@
                                 $("#lname2").val(returned.lname);
                                 $("#dob2").val(returned.dob);
                                 $("#ret_age2").val(returned.retirement_age);
-                            } else { //Not found
-                                $("p#status").text("Prospect Not Found");
                             }
                         },
                         error: function(returned) {
@@ -151,32 +148,6 @@
                 } else {
                     alert("Please enter at least a prospect name");
                 }
-            });
-
-            $("button#addprosp").on("click", function() {
-                var $firstname = $("#fname").val();
-                var $surname = $("#sname").val();
-                var $dob = $("#dob").val();
-                var $retirement = $("#ret_age").val();
-
-                var json = {
-                    fname: $firstname,
-                    lname: $surname,
-                    dob: $dob,
-                    retirement_age: $retirement,
-                };
-                json = JSON.stringify(json);
-
-                $.ajax({
-                    type: "POST",
-                    url: "/jhf/api/v1.0/prospects",
-                    data: json,
-                    contentType: "application/json; charset=UTF-8",
-                    success: function(data) {
-                        $("p#output").text(data);
-                        //alert("First name = " + $firstname);
-                    },
-                });
             });
         });
     </script>
