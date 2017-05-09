@@ -85,3 +85,11 @@ body {
     color: #76989B;
     font: 300 1rem verdana;
 }
+
+.half-padding-top {
+    padding-top: 15px;
+}
+
+.third-padding-top {
+    padding-top: 10px;
+}

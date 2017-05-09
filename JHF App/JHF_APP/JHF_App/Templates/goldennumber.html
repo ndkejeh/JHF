@@ -54,6 +54,7 @@
                 </div>
             </div>
         </div>
+        <!--E.O TOP SEARCH SECTION -->
         <div class="row dbl-padding-top" id="found">
             <div class="col-xs-11 col-xs-offset-1">
                 <div class="row">
@@ -80,7 +81,8 @@
                 </div>
             </div>
         </div>
-        <div class="row dbl-padding-top" id="GnInfo">
+        <!-- E.O PROSPECT FOUND SECTION -->
+        <div class="row dbl-padding-top" id="gnInfo">
             <div class="col-xs-11 col-xs-offset-1">
                 <div class="row">
                     <div class="col-xs-12 nopadding">
@@ -91,18 +93,35 @@
                     <div class="col-xs-6">
                         <div class="row std-padding-top">
                             <div class="col-xs-12 nopadding">
+                                <p style="font-size: 1.2rem">Expenditure</p>
+                            </div>
+                        </div>
+                        <div class="row third-padding-top">
+                            <div class="col-xs-6 nopadding">
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Current Expenditure*" readonly>
+                            </div>
+                            <div class="col-xs-6 nopadding">
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Golden Expenditure*" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-6">
+                        <div class="row std-padding-top">
+                            <div class="col-xs-12 nopadding">
                                 <p style="font-size: 1.2rem">Assets</p>
                             </div>
                         </div>
-                        <div class="row" class=assetInputs>
+                        <div class="row assetInputs1 third-padding-top" id="assetBoxes">
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Asset Name" id="assetName1" readonly>
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Asset Name" readonly>
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Asset Name" id="assetValue1" readonly>
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Asset Value" readonly>
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Asset Name" id="assetType1" readonly>
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Asset Type" readonly>
                             </div>
                         </div>
                         <div class="row std-padding-top">
@@ -110,7 +129,88 @@
                                 <input class="input-btn-grey" type="button" id="assetAddNew" value="Add Asset">  
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input class="input-btn-neg" type="button" id="assetAddNew" value="Remove Asset">  
+                                <input class="input-btn-neg" type="button" id="assetRemove" value="Remove Asset">  
+                            </div>
+                            <div class="col-xs-4 nopadding"></div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="row std-padding-top">
+                            <div class="col-xs-12 nopadding">
+                                <p style="font-size: 1.2rem">Contributions</p>
+                            </div>
+                        </div>
+                        <div class="row ctrbnInputs1 third-padding-top" id="ctrbnBoxes">
+                            <div class="col-xs-4 nopadding">
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Ctrbn Name" readonly>
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Ctrbn Dest." readonly>
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Ctrbn Type" readonly>
+                            </div>
+                        </div>
+                        <div class="row std-padding-top">
+                            <div class="col-xs-4 nopadding">
+                                <input class="input-btn-grey" type="button" id="ctrbnAddNew" value="Add Ctrbn">  
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                                <input class="input-btn-neg" type="button" id="ctrbnRemove" value="Remove Ctrbn">  
+                            </div>
+                            <div class="col-xs-4 nopadding"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-6">
+                        <div class="row std-padding-top">
+                            <div class="col-xs-12 nopadding">
+                                <p style="font-size: 1.2rem">Interests</p>
+                            </div>
+                        </div>
+                        <div class="row interestInputs1 third-padding-top" id="interestBoxes">
+                            <div class="col-xs-4 nopadding">
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Interest Name" readonly>
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Interest Type" readonly>
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                            </div>
+                        </div>
+                        <div class="row std-padding-top">
+                            <div class="col-xs-4 nopadding">
+                                <input class="input-btn-grey" type="button" id="interestAddNew" value="Add Interest">  
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                                <input class="input-btn-neg" type="button" id="interestRemove" value="Rem. Interest">  
+                            </div>
+                            <div class="col-xs-4 nopadding"></div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="row std-padding-top">
+                            <div class="col-xs-12 nopadding">
+                                <p style="font-size: 1.2rem">Prospect Notes</p>
+                            </div>
+                        </div>
+                        <div class="row noteInputs1 third-padding-top" id="noteBoxes">
+                            <div class="col-xs-4 nopadding">
+                                <textarea style="width: 90%" class="body-text" rows="5" placeholder="Report notes will be present in Gn report, private will only be on file " readonly></textarea>
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                                <input style="width: 75%" class="body-text" type="text" placeholder="Note Type." readonly>
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                            </div>
+                        </div>
+                        <div class="row std-padding-top">
+                            <div class="col-xs-4 nopadding">
+                                <input class="input-btn-grey" type="button" id="noteAddNew" value="Add Note">  
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                                <input class="input-btn-neg" type="button" id="noteRemove" value="Remove Note">  
                             </div>
                             <div class="col-xs-4 nopadding"></div>
                         </div>
@@ -123,16 +223,14 @@
     <!-- Jquery/AJAX -->
     <script>
         $("document").ready(function() {
-            var countAsset = 2 //needed for adding Prospect's Gn assets
-            
-            function appendAssets(count) {
-                if count != 1 {   
-                    var nameId = "assetName"+count;
-                    var valueId = "assetValue"+count;
-                    var typeId = "assetType"+count;
-                    $("div.asset")
-                
-                }
+            function newRow(baseBoxes, baseInputs) {
+                var newBoxes = baseBoxes.first().clone().insertAfter(baseBoxes.last());
+                newBoxes.toggleClass(function() {  
+                    $(this).removeClass(baseInputs+1);
+                    return baseInputs+baseBoxes.length;
+                });
+                alert(newBoxes.attr("class"));
+                alert(baseBoxes.length);
             }
             function resetGnQuery() {
                 $("#found").css("display", "block");
@@ -182,10 +280,18 @@
                     alert("Please enter at least a prospect name");
                 }
             });
-            //assetAddNew Button FUNCTION
+            //AddNew BUTTON FUNCTIONS
             $("input#assetAddNew").on("click", function() {
-                countAsset++; //increment
-                $("") 
+                newRow($("div#assetBoxes"), "assetInputs");
+            });
+            $("input#ctrbnAddNew").on("click", function() {
+                newRow($("div#ctrbnBoxes"), "ctrbnInputs");
+            });
+            $("input#interestAddNew").on("click", function() {
+                newRow($("div#interestBoxes"), "interestInputs");
+            });
+            $("input#noteAddNew").on("click", function() {
+                newRow($("div#noteBoxes"), "noteInputs");
             });
         });
     </script>
