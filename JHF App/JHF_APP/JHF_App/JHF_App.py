@@ -122,7 +122,7 @@ def adduser():
 def searchprospect():
     return render_template("change-view.html")
 
-@app.route("/goldennumber")
+@app.route("/goldennum")
 def goldennumber():
     return render_template("goldennumber.html")
 
@@ -237,6 +237,25 @@ def update_prospect(prosp_id):
         db.session.commit()
         return jsonify(updated_prosp)
 
+@app.route("/jhf/api/v1.0/prospects/gndetails/update/<int:prosp_id>", methods=["PUT", "DELETE"]) #the api for updating/adding new prospects and deleting
+def update_prospect_gndetails(prosp_id):
+    if prosp_id is not None:
+        owner = prospects.query.get(prosp_id) #put the right prospect into the owner object
+        if request.method == "PUT":
+            if request.json["action"] == "new": #then we are creating a new row of the sent resources for the owner as opposed to updating
+                objTables = [expenditures, assets, contributions, interests, notes] #stores the memory locations of the classes
+                listCount = 0
+                for key in request.json:
+                    if isinstance(request.json[key], list): #then it's an array of objects with table values
+                        for z in range(len(request.json[key])):
+                            kwargList = request.json[key].pop(0)
+                            kwargList["prospects"] = owner #this will handle the foreign key field linking to prospects
+                            newRow = objTables[listCount](**kwargList) #makes a new row
+                            db.session.add(newRow)
+                            db.session.commit()
+                        count+=1 #increment
+            return 200
+            elif request.json["action"] == "update" #the we are amending existing details
 
 
 
