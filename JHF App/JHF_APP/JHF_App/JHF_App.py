@@ -102,6 +102,7 @@ class referrers(db.Model):
     industry = db.Column(db.String(100))
     prospects = db.relationship('prospects', backref='referrers', lazy='dynamic')
 
+#//START OF CUSTOM FUNCTIONS
 def dateFormat(badDate):
     #takes a null or a date passed in the %d/%m/%Y format
     if badDate is None: #then send back without format
@@ -109,6 +110,12 @@ def dateFormat(badDate):
     else:
         goodDate = badDate.strftime("%d/%m/%Y")
         return(goodDate)
+
+def appendToList(**kwargs):
+    kwargDict = {}
+    for keys in  kwargs:
+        kwargDict[keys] = kwargs[keys]
+    return kwargDict
 
 @app.route("/")
 def index():
@@ -237,26 +244,32 @@ def update_prospect(prosp_id):
         db.session.commit()
         return jsonify(updated_prosp)
 
-@app.route("/jhf/api/v1.0/prospects/gndetails/update/<int:prosp_id>", methods=["PUT", "DELETE"]) #the api for updating/adding new prospects and deleting
-def update_prospect_gndetails(prosp_id):
+@app.route("/jhf/api/v1.0/prospects/gndetails/<int:prosp_id>", methods=["POST", "PUT", "DELETE"]) #the api for updating/adding new prospects and deleting
+def prospect_gndetails(prosp_id):
     if prosp_id is not None:
         owner = prospects.query.get(prosp_id) #put the right prospect into the owner object
-        if request.method == "PUT":
-            if request.json["action"] == "new": #then we are creating a new row of the sent resources for the owner as opposed to updating
-                objTables = [expenditures, assets, contributions, interests, notes] #stores the memory locations of the classes
-                listCount = 0
-                for key in request.json:
-                    if isinstance(request.json[key], list): #then it's an array of objects with table values
-                        for z in range(len(request.json[key])):
-                            kwargList = request.json[key].pop(0)
-                            kwargList["prospects"] = owner #this will handle the foreign key field linking to prospects
-                            newRow = objTables[listCount](**kwargList) #makes a new row
-                            db.session.add(newRow)
-                            db.session.commit()
-                        count+=1 #increment
-            return 200
-            elif request.json["action"] == "update" #the we are amending existing details
-
+        if request.method == "POST":
+            objDict = {"expenditures": expenditures, "assets": assets, "contributions": contributions, "interests": interests, "notes": notes} #store class memory locations in dict
+            multiDictList = []
+            for key in request.json:
+                if isinstance(request.json[key], list): #then it's an array of objects with table values
+                    for addr, DictKeys in enumerate(objDict):
+                        if DictKeys == key: #then addr is the correct location in objTables list
+                            for z in range(len(request.json[key])):
+                                if addr == 0 and owner.expenditures is not None: #for one-to-many integrity
+                                    abort(400) #an expenditure entry already exists, need to update not add new!!
+                                kwargList = request.json[key].pop(0)
+                                multiDictList.append(appendToList(**kwargList))
+                                kwargList["prospects"] = owner #this will handle the foreign key field linking to prospects
+                                #APPEND TO AN EMPTY LIST HERE FOR THE OUTPUT
+                                newRow = objDist[addr](**kwargList) #makes a new row
+                                db.session.add(newRow)
+                                #NOW QUICK AFTER THE FACT VALIDATION
+            db.session.commit() #now all will be committed if there's no error
+            return jsonify(multiDictList), 200
+        #elif
+    else:
+        abort(404)
 
 
 if __name__ == "__main__":
