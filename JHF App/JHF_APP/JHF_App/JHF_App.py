@@ -260,22 +260,23 @@ def prospect_gndetails(prosp_id):
                 "notes": [{"classaddr": notes, "ntype": ["Private", "Public"]}]}
             responseDict = {}
             multiDictList = []
-            for count, key in enumerate(request.json):
+            for key in request.json:
                 if isinstance(request.json[key], list): #then it's an array of objects with table values
-                    #THIS IS WHERE WE SHOULD DO THE CHECK!!
-                    for newCols in request.json[key][count]:
-                        for specialCols in objDict[key][0]:
-                            if newCols == specialCols: #then this is a protected column
-                                if isinstance(objDict[key][0][specialCols], list): #then there are prescribed values for col
-                                    goodVal = 0
-                                    for prescribedVal in objDict[key][0][specialCols]:
-                                        if prescribedVal == request.json[key][count][newCols]: #Good, it has an allowed value
-                                            goodVal = 1
-                                    if goodVal == 0:
-                                        return("Bad value in table %s number %s, column %s" %(key, (count+1), newCols)), 400
-                                else: #it's a required field and states that in its key-value pair
-                                    if request.json[key][count][newCols] is None or request.json[key][count][newCols] is "": #then bad empty val
-                                        return("%s column in %s table cannot be empty" %(newCols, key)), 400
+                    #THIS IS WHERE WE SHOULD DO THE VALIDATION!!
+                    for count, val in enumerate(request.json[key]): #I relaly only want the count but don't know how to do this withough getting both
+                        for newCols in request.json[key][count]:
+                            for specialCols in objDict[key][0]:
+                                if newCols == specialCols: #then this is a protected column
+                                    if isinstance(objDict[key][0][specialCols], list): #then there are prescribed values for col
+                                        goodVal = 0
+                                        for prescribedVals in objDict[key][0][specialCols]:
+                                            if prescribedVals == request.json[key][count][newCols]: #Good, it has an allowed value
+                                                goodVal = 1
+                                        if goodVal == 0:
+                                            return("Bad value in table %s number %s, column %s" %(key, (count+1), newCols)), 400
+                                    else: #it's a required field and states that in its key-value pair
+                                        if request.json[key][count][newCols] is None or request.json[key][count][newCols] is "": #then bad empty val
+                                            return("%s column in %s table cannot be empty" %(newCols, key)), 400
                     #End of validation - anything that gets here has passed and new entry can begin
                     for z in range(len(request.json[key])):
                         if key == "expenditures" and owner.expenditures is not None: #for one-to-many integrity
