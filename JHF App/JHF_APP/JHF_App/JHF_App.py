@@ -248,25 +248,50 @@ def update_prospect(prosp_id):
 def prospect_gndetails(prosp_id):
     if prosp_id is not None:
         owner = prospects.query.get(prosp_id) #put the right prospect into the owner object
+        if owner == None: #then there is no prospect that exist with this ID so abort
+            return("Prospect does not exist"), 400
         if request.method == "POST":
-            objDict = {"expenditures": expenditures, "assets": assets, "contributions": contributions, "interests": interests, "notes": notes} #store class memory locations in dict
+            #ObbjDict below stores class memory locations and info on required and constrained cols
+            #if the column is a key in the tables key area then it has prescribed values (if a list), or is required if not
+            objDict = {"expenditures": [{"classaddr": expenditures, "currentspend": "required", "goldenspend": "required"}],
+                "assets": [{"classaddr": assets, "atype": ["Property", "Pension", "Investment", "Fixed"]}],
+                "contributions": [{"classaddr": contributions, "ctype": ["Monthly", "Annual", "Lump Sum", "Final Salary"]}],
+                "interests": [{"classaddr": interests, "itype": ["Services", "Purchases"]}],
+                "notes": [{"classaddr": notes, "ntype": ["Private", "Public"]}]}
+            responseDict = {}
             multiDictList = []
             for key in request.json:
                 if isinstance(request.json[key], list): #then it's an array of objects with table values
-                    for addr, DictKeys in enumerate(objDict):
-                        if DictKeys == key: #then addr is the correct location in objTables list
-                            for z in range(len(request.json[key])):
-                                if addr == 0 and owner.expenditures is not None: #for one-to-many integrity
-                                    abort(400) #an expenditure entry already exists, need to update not add new!!
-                                kwargList = request.json[key].pop(0)
-                                multiDictList.append(appendToList(**kwargList))
-                                kwargList["prospects"] = owner #this will handle the foreign key field linking to prospects
-                                #APPEND TO AN EMPTY LIST HERE FOR THE OUTPUT
-                                newRow = objDist[addr](**kwargList) #makes a new row
-                                db.session.add(newRow)
-                                #NOW QUICK AFTER THE FACT VALIDATION
+                    #THIS IS WHERE WE SHOULD DO THE CHECK!!
+                    for newCols in request.json[key]:
+                        for specialCols in objDict[key]:
+                            if newCols == specialCols: #then this is a protected column
+                                if isinstance(objDict[key][specialCols], list): #then there are prescribed values for col
+                                    goodVal = 0
+                                    for prescribedVal in objDict[key][specialCols]:
+                                        if prescribedVal == request.json[key][newCols]: #Good, it has an allowed value
+                                            goodVal = 1
+                                        if goodVal == 0:
+                                            return("Bad value in table %s, column %s" %(request.json[key], request.json[key][newCols])), 400
+                                else: #it's a required field and states that in its key-value pair
+                                    if request.json[key][newCols] is None or request.json[key][newCols] is "": #then bad empty val
+                                        return("%s column in %s table cannot be empty" %(request.json[key][newCols], request.json[key])), 400
+                    #End of validation - anything that gets here has passed and new entry can begin
+                    for z in range(len(request.json[key])):
+                        if key == "expenditures" and owner.expenditures is not None: #for one-to-many integrity
+                            return("This prospect already has expenditure data"), 400 #an expenditure entry already exists, need to update not add new!!
+                        kwargList = request.json[key].pop(0)
+                        multiDictList.append(appendToList(**kwargList))
+                        kwargList["prospects"] = owner #this will handle the foreign key field linking to prospects
+                        #APPEND TO AN EMPTY LIST HERE FOR THE OUTPUT
+                        newRow = objDict[key][0]["classaddr"](**kwargList) #makes a new row/obj in table key
+                        db.session.add(newRow)
+                    responseDict[key] = multiDictList
+                    del multiDictList [:]
+                    return jsonify(responseDict)
             db.session.commit() #now all will be committed if there's no error
-            return jsonify(multiDictList), 200
+            responseDict["status"] = "success"
+            return jsonify(responseDict), 200
         #elif
     else:
         abort(404)
