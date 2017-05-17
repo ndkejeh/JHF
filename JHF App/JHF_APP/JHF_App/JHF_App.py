@@ -260,22 +260,22 @@ def prospect_gndetails(prosp_id):
                 "notes": [{"classaddr": notes, "ntype": ["Private", "Public"]}]}
             responseDict = {}
             multiDictList = []
-            for key in request.json:
+            for count, key in enumerate(request.json):
                 if isinstance(request.json[key], list): #then it's an array of objects with table values
                     #THIS IS WHERE WE SHOULD DO THE CHECK!!
-                    for newCols in request.json[key]:
-                        for specialCols in objDict[key]:
+                    for newCols in request.json[key][count]:
+                        for specialCols in objDict[key][0]:
                             if newCols == specialCols: #then this is a protected column
-                                if isinstance(objDict[key][specialCols], list): #then there are prescribed values for col
+                                if isinstance(objDict[key][0][specialCols], list): #then there are prescribed values for col
                                     goodVal = 0
-                                    for prescribedVal in objDict[key][specialCols]:
-                                        if prescribedVal == request.json[key][newCols]: #Good, it has an allowed value
+                                    for prescribedVal in objDict[key][0][specialCols]:
+                                        if prescribedVal == request.json[key][count][newCols]: #Good, it has an allowed value
                                             goodVal = 1
-                                        if goodVal == 0:
-                                            return("Bad value in table %s, column %s" %(request.json[key], request.json[key][newCols])), 400
+                                    if goodVal == 0:
+                                        return("Bad value in table %s number %s, column %s" %(key, (count+1), newCols)), 400
                                 else: #it's a required field and states that in its key-value pair
-                                    if request.json[key][newCols] is None or request.json[key][newCols] is "": #then bad empty val
-                                        return("%s column in %s table cannot be empty" %(request.json[key][newCols], request.json[key])), 400
+                                    if request.json[key][count][newCols] is None or request.json[key][count][newCols] is "": #then bad empty val
+                                        return("%s column in %s table cannot be empty" %(newCols, key)), 400
                     #End of validation - anything that gets here has passed and new entry can begin
                     for z in range(len(request.json[key])):
                         if key == "expenditures" and owner.expenditures is not None: #for one-to-many integrity
@@ -287,8 +287,8 @@ def prospect_gndetails(prosp_id):
                         newRow = objDict[key][0]["classaddr"](**kwargList) #makes a new row/obj in table key
                         db.session.add(newRow)
                     responseDict[key] = multiDictList
-                    del multiDictList [:]
-                    return jsonify(responseDict)
+                    multiDictList = []
+            return jsonify(responseDict)
             db.session.commit() #now all will be committed if there's no error
             responseDict["status"] = "success"
             return jsonify(responseDict), 200
