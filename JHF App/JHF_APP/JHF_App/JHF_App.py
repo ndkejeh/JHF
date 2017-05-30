@@ -156,7 +156,7 @@ def new_prospect():
 @app.route("/jhf/api/v1.0/prospects/find", methods=["POST"])
 #THE API FOR RETURNINIG MULTIPLE RESULTS OF A QUERY - THE ONE BELOW CONSTRAINS RESULTS TO ONE!
 def find_prospects(): #this api finds a prospect from the info posted and returns
-    if request.method == "POST":
+    if request.method == "POST": #don't need this as there is a strict post method only in declaration
         #found = {} #empty dictionary for response
         if "dob" in request.json and request.json["dob"] is not "": #then format it ahead of time
             request.json["dob"] = datetime.strptime(request.json["dob"], "%d/%m/%Y").date()
@@ -293,10 +293,32 @@ def prospect_gndetails(prosp_id):
             db.session.commit() #now all will be committed if there's no error
             responseDict["status"] = "success"
             return jsonify(responseDict), 200
-        #elif
+        #elif request.method == "PUT"
     else:
         abort(404)
 
+#THE Gn Details SEARCH API
+@app.route("/jhf/api/v1.0/prospects/gndetails/find/<int:prosp_id>", methods=["POST"]) #the api for updating/adding new prospects and deleting
+def searchProspectGndetails(prosp_id):
+    if prosp_id is not None:
+        owner = prospects.query.get(prosp_id)
+        if owner == None: #then prospect doesn't exist abort
+            return jsonify("Prospect does not exist"), 400
+        tableAddrs = {"assets": assets, "contributions": contributions, "notes": notes,
+            "expenditures": expenditures, "interests": interests} #dict of tables and their class addresses
+        if request.json["specificTables"] is not None: #then there is a request for only specific tables' data
+            if isinstance(request.json["specificTables"], list): #then proper format
+                #check table matches in sent specifics of what was sent
+                returnedTables = list(filter(lambda x: x in tableAddrs, request.json["specificTables"]))
+                if returnedTables == []:
+                    return jsonify("please enter proper table names all in small caps"), 400
+                else: #search and return results from tables in returnedTables
+                    objList = list(map(lambda x: tableAddrs[x].query.filter_by(prospects = owner).all(), returnedTables))
+                    return (str(objList))
+
+
+    else:
+        abort(404)
 
 if __name__ == "__main__":
     app.run(debug=True)
