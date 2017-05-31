@@ -21,6 +21,15 @@ class contributions(db.Model):
             if kwargs[newData] is not "":
                 setattr(self, newData, kwargs[newData])
 
+    def dictifyFields(self):
+        objToDict = {
+            "id": self.id,
+            "amount": str(self.amount),
+            "ctype": self.ctype,
+            "cto": self.cto,
+        }
+        return objToDict
+
 class notes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     note = db.Column(db.Text)
@@ -33,6 +42,13 @@ class notes(db.Model):
                 setattr(self,newData, "Private")
             else:
                 setattr(self, newData, kwargs[newData])
+    def dictifyFields(self):
+        objToDict = {
+            "id": self.id,
+            "note": self.note,
+            "ntype": self.ntype,
+        }
+        return objToDict
 
 class expenditures(db.Model): #has a one-to-one relationship with prospects
     id = db.Column(db.Integer, primary_key=True)
@@ -44,6 +60,14 @@ class expenditures(db.Model): #has a one-to-one relationship with prospects
         for newData in kwargs:
             if kwargs[newData] is not "":
                 setattr(self, newData, kwargs[newData])
+
+    def dictifyFields(self):
+        objToDict = {
+            "id": self.id,
+            "currentspend": str(self.currentspend),
+            "goldenspend": str(self.goldenspend),
+        }
+        return objToDict
 
 class assets(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -59,6 +83,15 @@ class assets(db.Model):
             else:
                 setattr(self, newData, kwargs[newData])
 
+    def dictifyFields(self):
+        objToDict = {
+            "id": self.id,
+            "name": self.name,
+            "value": str(self.value),
+            "atype": self.atype,
+        }
+        return objToDict
+
 class interests(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     interest = db.Column(db.String(18))
@@ -71,6 +104,14 @@ class interests(db.Model):
                 setattr(self,newData, "Service")
             else:
                 setattr(self, newData, kwargs[newData])
+
+    def dictifyFields(self):
+        objToDict = {
+            "id": self.id,
+            "interest": self.interest,
+            "itype": self.itype,
+        }
+        return objToDict
 
 class prospects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -95,12 +136,30 @@ class prospects(db.Model):
                     kwargs[newData] = datetime.strptime(kwargs[newData], "%d/%m/%Y").date()
                 setattr(self, newData, kwargs[newData])
 
+    def dictifyFields(self):
+        objToDict = {
+            "id": self.id,
+            "fname": self.fname,
+            "lname": self.lname,
+            "dob": self.dob.strftime("%d/%m/%Y"), #formatted for output
+            "retirement_age": self.retirement_age,
+        }
+        return objToDict
+
 class referrers(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(100))
     city = db.Column(db.String(45))
     industry = db.Column(db.String(100))
     prospects = db.relationship('prospects', backref='referrers', lazy='dynamic')
+
+    def dictifyFields(self):
+        objToDict = {
+            "id": self.id,
+            "name": self.name,
+            "industry": self.city,
+        }
+        return objToDict
 
 #//START OF CUSTOM FUNCTIONS
 def dateFormat(badDate):
@@ -117,6 +176,14 @@ def appendToList(**kwargs):
         kwargDict[keys] = kwargs[keys]
     return kwargDict
 
+def dictifyObjList(objList, end, ptr, outList):
+    if ptr == end: #then end of list reached, return list value
+        return outList
+    else:
+        outList.append(objList[ptr].dictifyFields()) #append dictified object fields
+        return dictifyObjList(objList,end, ptr+1, outList)
+
+#//START OF FLASK APP ROUTES
 @app.route("/")
 def index():
     return  render_template("index.html")
@@ -306,19 +373,39 @@ def searchProspectGndetails(prosp_id):
             return jsonify("Prospect does not exist"), 400
         tableAddrs = {"assets": assets, "contributions": contributions, "notes": notes,
             "expenditures": expenditures, "interests": interests} #dict of tables and their class addresses
-        if request.json["specificTables"] is not None: #then there is a request for only specific tables' data
+        objSort =[]
+        objSorted = [] #list that will eventually hold the sorted gb details data
+        if "specificTables" in request.json: #then there is a request for only specific tables' data
             if isinstance(request.json["specificTables"], list): #then proper format
                 #check table matches in sent specifics of what was sent
                 returnedTables = list(filter(lambda x: x in tableAddrs, request.json["specificTables"]))
                 if returnedTables == []:
                     return jsonify("please enter proper table names all in small caps"), 400
-                else: #search and return results from tables in returnedTables
-                    objList = list(map(lambda x: tableAddrs[x].query.filter_by(prospects = owner).all(), returnedTables))
-                    return (str(objList))
-
-
+                #else all good, search and return results from tables in returnedTables
+                objLists = [tableAddrs[x].query.filter_by(prospects=owner).all() for x in returnedTables]
+                #need to solve the case where the reponse is scalar (only one object not a list of them)!!!!
+        else: #the user just wants  gn detailsin all tables about the owner sent back
+            #get queries from all of the tables
+            returnedTables = [x for x in tableAddrs] #just puts all table names in the list
+            objLists = [tableAddrs[x].query.filter_by(prospects=owner).all() for x in tableAddrs]
+        #Now prepare the output JSON
+        #First condition gn details
+        for tables in objLists:
+            objSorted.append(dictifyObjList(tables, len(tables), 0, objSort))
+            objSort = [] #clear the list in order to separate the list of objs from different tables
+        gnDetails = {}
+        #now make a dictionary for gn details
+        for x in returnedTables:
+            gnDetails[x] = objSorted.pop(0)
+        #And now condition the rest of the JSON
+        returnJSON = {
+            "found": "true",
+            "prospect": owner.dictifyFields(),
+            "gnDetails": gnDetails,
+        }
+        return jsonify(returnJSON)
     else:
-        abort(404)
+        abort(400)
 
 if __name__ == "__main__":
     app.run(debug=True)
