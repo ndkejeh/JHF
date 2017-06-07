@@ -10,39 +10,53 @@
 <body>
     <h1>Enter a New Prospect</h1>
     <p>First Name: <input type="text" id="fname"></p>
-    <p>Surname: <input type="text" id="sname"></p>
+    <p>Surname: <input type="text" id="lname"></p>
     <p>D.O.B: <input type="text" placeholder="DD/MM/YYYY" id="dob"></p>
-    <p>Retirement Age: <input type="text" placeholder="65?" id="ret_age"></p>
+    <p>Retirement Age: <input type="text" placeholder="65?" id="retirement_age"></p>
     <button type="button" id="addprosp">Add Prospect</button>
     <p id="output">Submit should run the API to add user</p><br>
     <a href="/">Back</a>
     <script>
         $("document").ready(function() {
+            function requiredFields() {
+                if ($("#fname").val() == "" ||
+                    $("#lname").val() == "" ||
+                    $("#dob").val() == "" ||
+                    $("#retirement_age").val() == "") {
+                    alert("please enter values into all fields");
+                    return false;
+                }
+                return true;
+            }
             $("button#addprosp").on("click", function() {
-                var $fname = $("#fname").val();
-                var $lname = $("#sname").val();
-                var $dob = $("#dob").val();
-                var $retirement_age = $("#ret_age").val();
+                if (requiredFields()) { //if it equals true then
+                    var $fname = $("#fname").val();
+                    var $lname = $("#lname").val();
+                    var $dob = $("#dob").val();
+                    var $retirement_age = $("#retirement_age").val();
 
-                var json = {
-                    fname: $fname,
-                    lname: $lname,
-                    dob: $dob,
-                    retirement_age: $retirement_age,
-                };
-                json = JSON.stringify(json);
+                    var json = {
+                        fname: $fname,
+                        lname: $lname,
+                        dob: $dob,
+                        retirement_age: $retirement_age,
+                    };
+                    json = JSON.stringify(json);
 
-                $.ajax({
-                    type: "POST",
-                    url: "/jhf/api/v1.0/prospects",
-                    data: json,
-                    contentType: "application/json; charset=UTF-8",
-                    success: function(returned) {
-                        if (returned.status == 201) { //then it was created
-                            $("p#output").text("Prospect " + returned.fname + " " + returned.lname + " was created");
-                        }
-                    },
-                });
+                    $.ajax({
+                        type: "POST",
+                        url: "/jhf/api/v1.0/prospects",
+                        data: json,
+                        contentType: "application/json; charset=UTF-8",
+                        success: function(returned) {
+                            if (returned["status"] == "added") { //then it was created
+                                $("p#output").text("Prospect " + returned["added"]["fname"] + " " + returned["added"]["lname"] + " was created");
+                            }
+                        },
+                    });
+                } else { //field validation failed
+                    $("p#output").text("please enter values for all fields then click search");
+                }
             });
         });
     </script>

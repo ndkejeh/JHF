@@ -177,6 +177,8 @@ def appendToList(**kwargs):
     return kwargDict
 
 def dictifyObjList(objList, end, ptr, outList):
+    #function takes a list of object via objList, and returns a list of
+    #dictionary kwargs in outList (made by calling the table's dictifyFields method)
     if ptr == end: #then end of list reached, return list value
         return outList
     else:
@@ -208,77 +210,48 @@ def new_prospect():
     if request.method == 'POST':
         #use validation in the form - therefore will have to change to a form
         #new_entry = prospects(request.json["fname"], request.json["lname"], request.json["dob"], request.json["retirement_age"])
-        new_entry = prospects(**request.json)
-        db.session.add(new_entry)
+        newEntry = prospects(**request.json)
+        db.session.add(newEntry)
         db.session.commit()
-        entered = {
-            "fname": new_entry.fname,
-            "lname": new_entry.lname,
-            "dob": new_entry.dob,
-            "retirement_age": new_entry.retirement_age,
-            "status": "201", #201 is HTTP code for created
+        prospectResponse = newEntry.dictifyFields()
+        response = {
+            "added": prospectResponse,
+            "status": "added",
         }
-        return jsonify(entered),201
+        return jsonify(response),201
 
 @app.route("/jhf/api/v1.0/prospects/find", methods=["POST"])
-#THE API FOR RETURNINIG MULTIPLE RESULTS OF A QUERY - THE ONE BELOW CONSTRAINS RESULTS TO ONE!
+#THE API FOR RETURNING MULTIPLE RESULTS OF A QUERY - THE ONE BELOW CONSTRAINS RESULTS TO ONE!
 def find_prospects(): #this api finds a prospect from the info posted and returns
     if request.method == "POST": #don't need this as there is a strict post method only in declaration
-        #found = {} #empty dictionary for response
         if "dob" in request.json and request.json["dob"] is not "": #then format it ahead of time
             request.json["dob"] = datetime.strptime(request.json["dob"], "%d/%m/%Y").date()
-        #Now make an array where we keep only the sent search strings
+        #Now make a dict to keep the sent **kwargs for the query
         searchFields = {} #empty dictionary
         for searchKeys in request.json: #make a dict of actual included search strings
-            if request.json[searchKeys] is not "" and searchKeys != "find":
+            if request.json[searchKeys] is not "" and searchKeys != "scalar":
                 searchFields[searchKeys] = request.json[searchKeys]
-        target = prospects.query.filter_by(**searchFields).all()
-        #check if target is a list of objects or just a single object (single result)
-        if isinstance(target, list) and request.json["find"] != 1:
-            #then there are multiple results andour default is for user to take all results unless indicate 1
-            multResult = []
-            for x in range(len(target)):
-                singleTarget = target.pop(0) #take out head object in the list
-                scalarFound = {
-                    "id": singleTarget.id,
-                    "fname": singleTarget.fname,
-                    "lname": singleTarget.lname,
-                    "dob": dateFormat(getattr(singleTarget,"dob")),
-                    "retirement_age": singleTarget.retirement_age,
-                }
-                multResult.append(scalarFound)
-            #And now make return string
-            foundResponse = {
-                "queryList": multResult,
-                "length": x+1,
-                "status": "200",
-                "response": "Found",
-            }
-            return jsonify(foundResponse), 200
-        elif target is not None: #then something has been found but only return first result
-            targetScalar = prospects.query.filter_by(**searchFields).first()
-            foundResponse = {
-                "id": targetScalar.id,
-                "fname": targetScalar.fname,
-                "lname": targetScalar.lname,
-                "dob": dateFormat(getattr(targetScalar,"dob")),
-                "retirement_age": targetScalar.retirement_age,
-                "status": "200",
-                "response": "Found",
-            }
-            return jsonify(foundResponse), 200
-        else:
-            # searchStatus = "Not Found"
-            foundResponse = {
-                "id": None,
-                "fname": None,
-                "lname": None,
-                "dob": None,
-                "retirement_age": None,
-                "status": "404",
-                "response": "Not Found",
-            }
-            return jsonify(foundResponse), 404
+        queryResult = prospects.query.filter_by(**searchFields).all() #the query
+        if queryResult != []:
+            queryFound = "Found" #for respone
+            responeStatus = 200
+            if request.json["scalar"] == 1: #then user only wants first result
+                queryResult = [queryResult.pop(0)] #take the first result and put in list
+        else: #the query returned no result
+            queryFound = "Not Found"
+            responeStatus = 404
+        #Now condition and shape the output
+        jsonResult = []
+        dictifyObjList(queryResult, len(queryResult), 0, jsonResult)
+        #Now build the output
+        respone = {
+            "result": jsonResult,
+            "length": len(jsonResult),
+            "query": queryFound,
+        }
+        return jsonify(respone), responeStatus
+    else: #not a POST request
+        abort(404)
 
 @app.route("/jhf/api/v1.0/prospects/<int:prosp_id>", methods=["PUT", "DELETE"]) #The api for updating a prospect
 def update_prospect(prosp_id):
@@ -361,6 +334,7 @@ def prospect_gndetails(prosp_id):
             responseDict["status"] = "success"
             return jsonify(responseDict), 200
         #elif request.method == "PUT"
+        #else #the method is DELETE
     else:
         abort(404)
 

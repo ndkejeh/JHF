@@ -11,51 +11,61 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="../static/style.css">
 </head>
+
 <body>
     <div class="container">
         <div class="row">
             <div class="col-xs-1 nopadding">
             </div>
             <div class="col-xs-8 nopadding">
-                <p style="font-size: 2.5em">Search Prospect</p>
+                <p style="font-size: 2em; color: #E2C675">Add/Update Golden Number Details</p>
             </div>
         </div>
+        <!--S.O TOP SEARCH SECTION-->
         <div class="row std-padding-top">
             <div class="col-xs-11 col-xs-offset-1">
                 <div class="row">
+                    <div class="col-xs-12 nopadding">
+                        <p style="font-size: 1.5rem"> Search Existing Prospects</p>
+                    </div>
+                </div>
+                <div class="row std-padding-top">
                     <div class="col-xs-4 nopadding">
-                        <input class="body-text" type="text" id="fname" placeholder="First Name">
+                        <input class="body-text" type="text" id="searchFname" placeholder="First Name">
                     </div>
                     <div class="col-xs-4 nopadding">
-                        <input class="body-text" type="text" id="lname" placeholder="Surname">
+                        <input class="body-text" type="text" id="searchLname" placeholder="Surname">
                     </div>
                     <div class="col-xs-4 nopadding">
-                        <input class="body-text" type="text" id="dob" placeholder="DOB - DD/MM/YYY">
+                        <input class="body-text" type="text" id="searchDob" placeholder="DOB - DD/MM/YYY">
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row std-padding-top">
+        <div class="row std-padding-top std-padding-bottom">
             <div class="col-xs-11 col-xs-offset-1">
                 <div class="row">
                     <div class="col-xs-4">
                         <div class="row">
                             <div class="col-xs-6 nopadding">
-                                <input class="input-btn-gold" type="button" id="search" value="Search">
+                                <a class="btn-gold" href="" id="searchButton">Search</a>
+                                <!--<input class="input-btn-gold" type="button" id="search" value="Search">-->
                             </div>
                             <div class="col-xs-6 nopadding">
-                                <input class="input-btn-grey" type="button" id="top-back" value="Back">    
+                                <a class="btn-grey" href="index.html" id="backButton">Back</a>
+                                <!--<input class="input-btn-grey" type="button" id="top-back" value="Back">-->
                             </div>
                         </div>
                     </div>
                     <div class="col-xs-8 nopadding">
-                        <p id="search-descr" class="body-text">Enter prospects details and click search</p>
+                        <p id="searchDescr" class="body-text">Enter existing prospect's details and click search</p>
                     </div>
                 </div>
             </div>
         </div>
         <!--E.O TOP SEARCH SECTION -->
-        <div class="row dbl-padding-top" id="found">
+        <!-- S.O PROSPECT FOUND SECTION -->
+        <div class="row std-padding-top std-padding-bottom" id="found">
             <div class="col-xs-11 col-xs-offset-1">
                 <div class="row">
                     <div class="col-xs-12 nopadding">
@@ -63,30 +73,34 @@
                     </div>
                 </div>
                 <div class="row std-padding-top">
-                     <div class="col-xs-4 nopadding">
-                        <input class="body-text" type="text" id="found-fname" placeholder="First Name">
+                    <div class="col-xs-4 nopadding">
+                        <input class="body-text" style="color: #b24026" type="text" id="foundFname" placeholder="First Name" readonly>
+                        <!--invisible id field-->
+                        <input class="body-text" type="text" id="foundId" style="display: none" readonly>
                     </div>
                     <div class="col-xs-4 nopadding">
-                        <input class="body-text" type="text" id="found-lname" placeholder="Surname">
+                        <input class="body-text" style="color: #b24026" type="text" id="foundLname" placeholder="Surname" readonly>
                     </div>
                     <div class="col-xs-4 nopadding">
-                        <input class="body-text" type="text" id="found-dob" placeholder="DOB - DD/MM/YYY">
+                        <input class="body-text" style="color: #b24026" type="text" id="foundDob" placeholder="DOB - DD/MM/YYY" readonly>
                     </div>
                 </div>
                 <div class="row std-padding-top">
                     <div class="col-xs-2 nopadding">
-                        <input class="input-btn-gold" type="button" id="Get-Gn" value="Details">
+                        <a class="btn-gold" href="" id="getGnDetails">Update Gn Details</a>
+                        <!--<input class="input-btn-gold-fluid" type="button" id="Get-Gn" value="Prospect's Details">-->
                     </div>
                     <div class="col-xs-10 nopadding"></div>
                 </div>
             </div>
         </div>
         <!-- E.O PROSPECT FOUND SECTION -->
+        <!-- S.O GN Details SECTION -->
         <div class="row dbl-padding-top" id="gnInfo">
             <div class="col-xs-11 col-xs-offset-1">
                 <div class="row">
                     <div class="col-xs-12 nopadding">
-                        <p style="font-size: 1.5rem">Prospect's Gn Info</p>
+                        <p style="font-size: 1.5rem; color: #E2C675">Update Gn Details</p>
                     </div>
                 </div>
                 <div class="row">
@@ -126,10 +140,12 @@
                         </div>
                         <div class="row std-padding-top">
                             <div class="col-xs-4 nopadding">
-                                <input class="input-btn-grey" type="button" id="assetAddNew" value="Add Asset">  
+                                <a class="btn-gold" href="" id="assetAddNew">Add Asset</a>
+                                <!--<input class="input-btn-grey" type="button" id="assetAddNew" value="Add Asset">-->
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input class="input-btn-neg" type="button" id="assetRemove" value="Remove Asset">  
+                                <a class="btn-grey" href="" id="assetRemove">Remove Asset</a>
+                                <!--<input class="input-btn-neg" type="button" id="assetRemove" value="Remove Asset">-->
                             </div>
                             <div class="col-xs-4 nopadding"></div>
                         </div>
@@ -153,10 +169,12 @@
                         </div>
                         <div class="row std-padding-top">
                             <div class="col-xs-4 nopadding">
-                                <input class="input-btn-grey" type="button" id="ctrbnAddNew" value="Add Ctrbn">  
+                                <a class="btn-gold" href="" id="ctrbnAddNew">Add Ctrbn</a>
+                                <!--<input class="input-btn-grey" type="button" id="ctrbnAddNew" value="Add Ctrbn">-->
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input class="input-btn-neg" type="button" id="ctrbnRemove" value="Remove Ctrbn">  
+                                <a class="btn-grey" href="" id="ctrbnRemove">Remove Ctrbn</a>
+                                <!--<input class="input-btn-neg" type="button" id="ctrbnRemove" value="Remove Ctrbn">-->
                             </div>
                             <div class="col-xs-4 nopadding"></div>
                         </div>
@@ -181,10 +199,12 @@
                         </div>
                         <div class="row std-padding-top">
                             <div class="col-xs-4 nopadding">
-                                <input class="input-btn-grey" type="button" id="interestAddNew" value="Add Interest">  
+                                <a class="btn-gold" href="" id="interestAddNew">Add Interest</a>
+                                <!--<input class="input-btn-grey" type="button" id="interestAddNew" value="Add Interest">-->
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input class="input-btn-neg" type="button" id="interestRemove" value="Rem. Interest">  
+                                <a class="btn-grey" href="" id="interestRemove">Remove Interest</a>
+                                <!--<input class="input-btn-neg" type="button" id="interestRemove" value="Rem. Interest">-->
                             </div>
                             <div class="col-xs-4 nopadding"></div>
                         </div>
@@ -207,10 +227,25 @@
                         </div>
                         <div class="row std-padding-top">
                             <div class="col-xs-4 nopadding">
-                                <input class="input-btn-grey" type="button" id="noteAddNew" value="Add Note">  
+                                <a class="btn-gold" href="" id="noteAddNew">Add Note</a>
+                                <!--<input class="input-btn-grey" type="button" id="noteAddNew" value="Add Note">-->
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input class="input-btn-neg" type="button" id="noteRemove" value="Remove Note">  
+                                <a class="btn-grey" href="" id="noteRemove">Remove Note</a>
+                                <!--<input class="input-btn-neg" type="button" id="noteRemove" value="Remove Note">-->
+                            </div>
+                            <div class="col-xs-4 nopadding"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row std-padding-top std-padding-bottom">
+                    <div class="col-xs-6">
+                        <div class="row">
+                            <div class="col-xs-4 nopadding">
+                                <input class="input-btn-gold-fluid" type="button" id="updateDetails" value="Update Details">
+                            </div>
+                            <div class="col-xs-4 nopadding">
+                                <input class="input-btn-grey" type="button" id="detailsCancel" value="Cancel">
                             </div>
                             <div class="col-xs-4 nopadding"></div>
                         </div>
@@ -219,37 +254,50 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Jquery/AJAX -->
     <script>
         $("document").ready(function() {
             function newRow(baseBoxes, baseInputs) {
                 var newBoxes = baseBoxes.first().clone().insertAfter(baseBoxes.last());
-                newBoxes.toggleClass(function() {  
-                    $(this).removeClass(baseInputs+1);
-                    return baseInputs+baseBoxes.length;
+                newBoxes.toggleClass(function() {
+                    $(this).removeClass(baseInputs + 1);
+                    return baseInputs + baseBoxes.length;
                 });
-                alert(newBoxes.attr("class"));
-                alert(baseBoxes.length);
+                //                alert(newBoxes.attr("class"));
+                //                alert(baseBoxes.length);
             }
+
+            function removeRow(baseBoxes, thisElement) {
+                if (baseBoxes.length > 1) { //then there are cloned rows to delete
+                    //alert("in if function");
+                    $(thisElement).parent().parent().prev().remove();
+                }
+            }
+
             function resetGnQuery() {
                 $("#found").css("display", "block");
-                    $("#found-fname").val("");
-                    $("#found-lname").val("");
-                    $("#found-dob").val("");
-                    $("#found").removeAttr("style");
+                $("#found-fname").val("");
+                $("#found-lname").val("");
+                $("#found-dob").val("");
+                $("#found").removeAttr("style");
             }
-            //THE SEARCH FUNCTION
-            $("#search").on("click", function() {
-                if ($("#fname").val().length != 0) {
-                    var $fname = $("#fname").val();
-                    var $lname = $("#lname").val();
-                    var $dob = $("#dob").val();
+            
+            function populateGnArea(queryList, )
+            /////////////////////////////////THE SEARCH FUNCTIONS & EVENTS/////////////////////
+            /////////INITIAL PROSPECT SEARCH
+            $("a#searchButton").on("click", function(event) {
+                event.preventDefault();
+                if ($("#searchFname").val().length != 0) { //then it's not empty
+                    var $fname = $("#searchFname").val();
+                    var $lname = $("#searchLname").val();
+                    var $dob = $("#searchDob").val();
 
                     var searchJson = {
                         fname: $fname,
                         lname: $lname,
                         dob: $dob,
+                        scalar: 1,
                     };
                     searchJson = JSON.stringify(searchJson);
                     $.ajax({
@@ -258,40 +306,77 @@
                         data: searchJson,
                         contentType: "application/json; charset=UTF-8",
                         success: function(returned) {
-                            if (returned.status == "200") {
+                            if (returned["query"] == "Found") {
                                 // will return a JSON object with the found prospect
                                 $("#found").css("display", "block");
-                                //$("#id2").val(returned.id);
-                                $("#found-fname").val(returned.fname);
-                                $("#found-lname").val(returned.lname);
-                                $("#found-dob").val(returned.dob);
-                                //$("#ret_age2").val(returned.retirement_age);
-                            } 
-                        },
-                        error: function(returned) {
-                            if (returned.status == "404") {
-                                resetGnQuery(); //call function to reset the page's appearance
-                                $("p#search-descr").text("Prospect Not Found");
+                                $("#foundFname").val(returned["result"][0]["fname"]);
+                                $("#foundLname").val(returned["result"][0]["lname"]);
+                                $("#foundDob").val(returned["result"][0]["dob"]);
+                                $("#foundId").val(returned["result"][0]["id"]);
                             }
                         },
+                        error: function(returned) {
+                            $("p#searchDescr").text("Prospect Not Found, check fields and try again");
+                        },
                     });
-                } 
-                else {
-                    alert("Please enter at least a prospect name");
+                } else {
+                    alert("Must enter prospect's first name");
                 }
             });
-            //AddNew BUTTON FUNCTIONS
-            $("input#assetAddNew").on("click", function() {
+            /////////////GET GN DETAILS SEARCH
+            $("a#getGnDetails").on("click", function(event) {
+                event.preventDefault();
+                //we want to get info from all of the tables so send empty JSON string
+                alert("length of hello is "+ hello.length);
+                searchJson = JSON.stringify({});
+                $.ajax({
+                   type: "POST",
+                    url: "/jhf/api/v1.0/prospects/gndetails/find/"+$("#foundId").val(), //the ID of the prospect
+                    data: searchJson,
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response){
+                        
+                        
+                    }
+                });
+            });
+            
+            
+            
+            
+            /////////////////////AddNew BUTTON FUNCTIONS/////////////////////////
+            $("a#assetAddNew").on("click", function(event) {
+                event.preventDefault();
                 newRow($("div#assetBoxes"), "assetInputs");
             });
-            $("input#ctrbnAddNew").on("click", function() {
+            $("a#ctrbnAddNew").on("click", function(event) {
+                event.preventDefault();
                 newRow($("div#ctrbnBoxes"), "ctrbnInputs");
             });
-            $("input#interestAddNew").on("click", function() {
+            $("a#interestAddNew").on("click", function(event) {
+                event.preventDefault();
                 newRow($("div#interestBoxes"), "interestInputs");
             });
-            $("input#noteAddNew").on("click", function() {
+            $("a#noteAddNew").on("click", function(event) {
+                event.preventDefault();
                 newRow($("div#noteBoxes"), "noteInputs");
+            });
+            /////////////////Remove BUTTON FUNCTIONS/////////////////////////
+            $("a#assetRemove").on("click", function(event) {
+                event.preventDefault();
+                removeRow($("div#assetBoxes"), this);
+            });
+            $("a#ctrbnRemove").on("click", function(event) {
+                event.preventDefault();
+                removeRow($("div#ctrbnBoxes"), this);
+            });
+            $("a#interestRemove").on("click", function(event) {
+                event.preventDefault();
+                removeRow($("div#interestBoxes"), this);
+            });
+            $("a#noteRemove").on("click", function(event) {
+                event.preventDefault();
+                removeRow($("div#noteBoxes"), this);
             });
         });
     </script>

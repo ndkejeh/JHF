@@ -76,7 +76,7 @@ body {
 }
 
 #found {
-    /*display: none;*/
+/*    display: none;*/
 }
 
 .input-btn-neg {
@@ -92,4 +92,51 @@ body {
 
 .third-padding-top {
     padding-top: 10px;
+}
+
+.input-btn-gold-fluid {
+    border: 2px solid #E2C675;
+    background-color: #fff;
+    color: #E2C675;
+    font: 300 1rem verdana;
+}
+
+.std-padding-bottom {
+    padding-bottom: 30px
+}
+
+.btn-grey {
+    border: 1px solid #b2b2b2;
+    color: #b2b2b2;
+    font: 300 1rem verdana;
+    padding: 3px 15px 3px 15px;
+}
+
+a.btn-grey:hover {
+    text-decoration: none;
+    color:#E25014;
+    border-color: #E25014;
+    
+}
+
+.btn-gold {
+    border: 1px solid #b2b2b2;
+    color: #b2b2b2;
+    font: 300 1rem verdana;
+    padding: 3px 15px 3px 15px;
+}
+
+a.btn-gold:hover {
+    text-decoration: none;
+    color: #E2C675;
+    border-color: #E2C675;
+    
+}
+
+a:focus {
+    text-decoration: none;
+    color: #b2b2b2;
+}
+#gnInfo {
+    display: none;
 }
