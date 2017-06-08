@@ -138,5 +138,31 @@ a:focus {
     color: #b2b2b2;
 }
 #gnInfo {
-    display: none;
+/*    display: none;*/
 }
+
+/*
+.assetsInputs0 #name {
+    border-color: red;
+}
+
+.assetsInputs0 #value {
+    border-color: blue;
+}
+
+.assetsInputs0 #atype {
+    border-color: yellow;
+}
+
+.assetsInputs1 #name {
+    border-color: chartreuse;
+}
+
+.assetsInputs1 #value {
+    border-color: rosybrown
+}
+
+.assetsInputs1 #atype {
+    border-color: fuchsia;
+}
+*/

@@ -377,7 +377,7 @@ def searchProspectGndetails(prosp_id):
             "prospect": owner.dictifyFields(),
             "gnDetails": gnDetails,
         }
-        return jsonify(returnJSON)
+        return jsonify(returnJSON), 200
     else:
         abort(400)
 

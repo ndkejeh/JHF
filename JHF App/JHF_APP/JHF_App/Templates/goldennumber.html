@@ -52,7 +52,7 @@
                                 <!--<input class="input-btn-gold" type="button" id="search" value="Search">-->
                             </div>
                             <div class="col-xs-6 nopadding">
-                                <a class="btn-grey" href="index.html" id="backButton">Back</a>
+                                <a class="btn-grey" href="/" id="backButton">Back</a>
                                 <!--<input class="input-btn-grey" type="button" id="top-back" value="Back">-->
                             </div>
                         </div>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="row std-padding-top">
                     <div class="col-xs-2 nopadding">
-                        <a class="btn-gold" href="" id="getGnDetails">Update Gn Details</a>
+                        <a class="btn-gold" href="" id="GnDetailsButton">Update Gn Details</a>
                         <!--<input class="input-btn-gold-fluid" type="button" id="Get-Gn" value="Prospect's Details">-->
                     </div>
                     <div class="col-xs-10 nopadding"></div>
@@ -110,12 +110,14 @@
                                 <p style="font-size: 1.2rem">Expenditure</p>
                             </div>
                         </div>
-                        <div class="row third-padding-top">
+                        <div class="row third-padding-top expendituresInputs0" id="expendituresBoxes">
                             <div class="col-xs-6 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Current Expenditure*" readonly>
+                                <!--invisible id field-->
+                                <input class="body-text" type="text" id="id" style="display: none" readonly>
+                                <input style="width: 75%" class="body-text" id="currentspend" type="text" placeholder="Current Expenditure*" readonly>
                             </div>
                             <div class="col-xs-6 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Golden Expenditure*" readonly>
+                                <input style="width: 75%" class="body-text" id="goldenspend" type="text" placeholder="Golden Expenditure*" readonly>
                             </div>
                         </div>
                     </div>
@@ -127,24 +129,26 @@
                                 <p style="font-size: 1.2rem">Assets</p>
                             </div>
                         </div>
-                        <div class="row assetInputs1 third-padding-top" id="assetBoxes">
+                        <div class="row assetsInputs0 third-padding-top" id="assetsBoxes">
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Asset Name" readonly>
+                                <!--invisible id field-->
+                                <input class="body-text" type="text" id="id" style="display: none" readonly>
+                                <input style="width: 75%" id="name" class="body-text" type="text" placeholder="Asset Name" readonly>
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Asset Value" readonly>
+                                <input style="width: 75%" class="body-text" id="value" type="text" placeholder="Asset Value" readonly>
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Asset Type" readonly>
+                                <input style="width: 75%" class="body-text" id="atype" type="text" placeholder="Asset Type" readonly>
                             </div>
                         </div>
                         <div class="row std-padding-top">
                             <div class="col-xs-4 nopadding">
-                                <a class="btn-gold" href="" id="assetAddNew">Add Asset</a>
+                                <a class="btn-gold" href="" id="assetsAddNew">Add Asset</a>
                                 <!--<input class="input-btn-grey" type="button" id="assetAddNew" value="Add Asset">-->
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <a class="btn-grey" href="" id="assetRemove">Remove Asset</a>
+                                <a class="btn-grey" href="" id="assetsRemove">Remove Asset</a>
                                 <!--<input class="input-btn-neg" type="button" id="assetRemove" value="Remove Asset">-->
                             </div>
                             <div class="col-xs-4 nopadding"></div>
@@ -156,24 +160,26 @@
                                 <p style="font-size: 1.2rem">Contributions</p>
                             </div>
                         </div>
-                        <div class="row ctrbnInputs1 third-padding-top" id="ctrbnBoxes">
+                        <div class="row contributionsInputs0 third-padding-top" id="contributionsBoxes">
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Ctrbn Name" readonly>
+                                <!--invisible id field-->
+                                <input class="body-text" type="text" id="id" style="display: none" readonly>
+                                <input style="width: 75%" id="amount" class="body-text" type="text" placeholder="Ctrbn amount" readonly>
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Ctrbn Dest." readonly>
+                                <input style="width: 75%" class="body-text" id="cto" type="text" placeholder="Ctrbn Dest." readonly>
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Ctrbn Type" readonly>
+                                <input style="width: 75%" class="body-text" id="ctype" type="text" placeholder="Ctrbn Type" readonly>
                             </div>
                         </div>
                         <div class="row std-padding-top">
                             <div class="col-xs-4 nopadding">
-                                <a class="btn-gold" href="" id="ctrbnAddNew">Add Ctrbn</a>
+                                <a class="btn-gold" href="" id="contributionsAddNew">Add Ctrbn</a>
                                 <!--<input class="input-btn-grey" type="button" id="ctrbnAddNew" value="Add Ctrbn">-->
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <a class="btn-grey" href="" id="ctrbnRemove">Remove Ctrbn</a>
+                                <a class="btn-grey" href="" id="contributionsRemove">Remove Ctrbn</a>
                                 <!--<input class="input-btn-neg" type="button" id="ctrbnRemove" value="Remove Ctrbn">-->
                             </div>
                             <div class="col-xs-4 nopadding"></div>
@@ -187,23 +193,25 @@
                                 <p style="font-size: 1.2rem">Interests</p>
                             </div>
                         </div>
-                        <div class="row interestInputs1 third-padding-top" id="interestBoxes">
+                        <div class="row interestsInputs0 third-padding-top" id="interestsBoxes">
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Interest Name" readonly>
+                                <!--invisible id field-->
+                                <input class="body-text" type="text" id="id" style="display: none" readonly>
+                                <input style="width: 75%" class="body-text" id="interest" type="text" placeholder="Interest Name" readonly>
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Interest Type" readonly>
+                                <input style="width: 75%" class="body-text" id="itype" type="text" placeholder="Interest Type" readonly>
                             </div>
                             <div class="col-xs-4 nopadding">
                             </div>
                         </div>
                         <div class="row std-padding-top">
                             <div class="col-xs-4 nopadding">
-                                <a class="btn-gold" href="" id="interestAddNew">Add Interest</a>
+                                <a class="btn-gold" href="" id="interestsAddNew">Add Interest</a>
                                 <!--<input class="input-btn-grey" type="button" id="interestAddNew" value="Add Interest">-->
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <a class="btn-grey" href="" id="interestRemove">Remove Interest</a>
+                                <a class="btn-grey" href="" id="interestsRemove">Remove Interest</a>
                                 <!--<input class="input-btn-neg" type="button" id="interestRemove" value="Rem. Interest">-->
                             </div>
                             <div class="col-xs-4 nopadding"></div>
@@ -215,23 +223,25 @@
                                 <p style="font-size: 1.2rem">Prospect Notes</p>
                             </div>
                         </div>
-                        <div class="row noteInputs1 third-padding-top" id="noteBoxes">
+                        <div class="row notesInputs0 third-padding-top" id="notesBoxes">
                             <div class="col-xs-4 nopadding">
-                                <textarea style="width: 90%" class="body-text" rows="5" placeholder="Report notes will be present in Gn report, private will only be on file " readonly></textarea>
+                                <!--invisible id field-->
+                                <input class="body-text" type="text" id="id" style="display: none" readonly>
+                                <textarea style="width: 90%" class="body-text" id="note" rows="5" placeholder="Report notes will be present in Gn report, private will only be on file " readonly></textarea>
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <input style="width: 75%" class="body-text" type="text" placeholder="Note Type." readonly>
+                                <input style="width: 75%" class="body-text" id="ntype" type="text" placeholder="Note Type." readonly>
                             </div>
                             <div class="col-xs-4 nopadding">
                             </div>
                         </div>
                         <div class="row std-padding-top">
                             <div class="col-xs-4 nopadding">
-                                <a class="btn-gold" href="" id="noteAddNew">Add Note</a>
+                                <a class="btn-gold" href="" id="notesAddNew">Add Note</a>
                                 <!--<input class="input-btn-grey" type="button" id="noteAddNew" value="Add Note">-->
                             </div>
                             <div class="col-xs-4 nopadding">
-                                <a class="btn-grey" href="" id="noteRemove">Remove Note</a>
+                                <a class="btn-grey" href="" id="notesRemove">Remove Note</a>
                                 <!--<input class="input-btn-neg" type="button" id="noteRemove" value="Remove Note">-->
                             </div>
                             <div class="col-xs-4 nopadding"></div>
@@ -261,16 +271,18 @@
             function newRow(baseBoxes, baseInputs) {
                 var newBoxes = baseBoxes.first().clone().insertAfter(baseBoxes.last());
                 newBoxes.toggleClass(function() {
-                    $(this).removeClass(baseInputs + 1);
+                    $(this).removeClass(baseInputs + 0);
                     return baseInputs + baseBoxes.length;
                 });
-                //                alert(newBoxes.attr("class"));
-                //                alert(baseBoxes.length);
+//                alert("from newRow func: "+baseBoxes.length);
+//                alert(baseBoxes.last().attr("class"));
+             //                   alert(baseBoxes.length);
+               // alert($("div#assetsBoxes").length);
+                
             }
 
             function removeRow(baseBoxes, thisElement) {
                 if (baseBoxes.length > 1) { //then there are cloned rows to delete
-                    //alert("in if function");
                     $(thisElement).parent().parent().prev().remove();
                 }
             }
@@ -283,7 +295,27 @@
                 $("#found").removeAttr("style");
             }
             
-            function populateGnArea(queryList, )
+            function makeBaseBoxes(tableName) {
+                return "div#"+tableName+"Boxes";
+            }
+            
+            function makeBaseInputs(tableName) {
+                return tableName+"Inputs";
+            }
+            
+            function placeData(dataArr, baseBoxes, baseInputs, ptr) {
+                for (var field in dataArr[ptr]) {
+                    $("."+baseInputs+ptr+ " #"+field).val(dataArr[ptr][field]);
+                }
+                if ($(baseBoxes).length < dataArr.length) {
+//                    alert(baseBoxes+".length: "+$(baseBoxes).length+" Array.length: "+dataArr.length);
+                    newRow($(baseBoxes), baseInputs); //make a new row for the extra data
+                    placeData(dataArr, baseBoxes, baseInputs, ptr+1);
+                }
+                else {
+                    return "true"; //done
+                }
+            }
             /////////////////////////////////THE SEARCH FUNCTIONS & EVENTS/////////////////////
             /////////INITIAL PROSPECT SEARCH
             $("a#searchButton").on("click", function(event) {
@@ -313,6 +345,7 @@
                                 $("#foundLname").val(returned["result"][0]["lname"]);
                                 $("#foundDob").val(returned["result"][0]["dob"]);
                                 $("#foundId").val(returned["result"][0]["id"]);
+                                //$(".assetsInputs0 #name").val(returned["result"][0]["fname"]);
                             }
                         },
                         error: function(returned) {
@@ -324,10 +357,10 @@
                 }
             });
             /////////////GET GN DETAILS SEARCH
-            $("a#getGnDetails").on("click", function(event) {
+            $("a#GnDetailsButton").on("click", function(event) {
                 event.preventDefault();
                 //we want to get info from all of the tables so send empty JSON string
-                alert("length of hello is "+ hello.length);
+//                alert("length of hello is I don't know");
                 searchJson = JSON.stringify({});
                 $.ajax({
                    type: "POST",
@@ -335,9 +368,18 @@
                     data: searchJson,
                     contentType: "application/json; charset=UTF-8",
                     success: function(response){
-                        
-                        
-                    }
+//                       alert("Success! "+response["gnDetails"]["assets"][0]["name"]);
+                        var responseData = response["gnDetails"];
+                        for (var tableName in responseData) {
+                            if (responseData[tableName].length != 0) { //then there's data so let's enter it!
+//                                alert("Hi again"+tableName);
+                                placeData(response["gnDetails"][tableName], makeBaseBoxes(tableName), makeBaseInputs(tableName), 0);
+                            }
+                        } 
+                    },
+                    error: function(){
+                        alert("whoops");
+                    },
                 });
             });
             
@@ -345,38 +387,38 @@
             
             
             /////////////////////AddNew BUTTON FUNCTIONS/////////////////////////
-            $("a#assetAddNew").on("click", function(event) {
+            $("a#assetsAddNew").on("click", function(event) {
                 event.preventDefault();
-                newRow($("div#assetBoxes"), "assetInputs");
+                newRow($("div#assetsBoxes"), "assetsInputs");
             });
-            $("a#ctrbnAddNew").on("click", function(event) {
+            $("a#contributionsAddNew").on("click", function(event) {
                 event.preventDefault();
-                newRow($("div#ctrbnBoxes"), "ctrbnInputs");
+                newRow($("div#contributionsBoxes"), "contributionsInputs");
             });
-            $("a#interestAddNew").on("click", function(event) {
+            $("a#interestsAddNew").on("click", function(event) {
                 event.preventDefault();
-                newRow($("div#interestBoxes"), "interestInputs");
+                newRow($("div#interestsBoxes"), "interestsInputs");
             });
-            $("a#noteAddNew").on("click", function(event) {
+            $("a#notesAddNew").on("click", function(event) {
                 event.preventDefault();
-                newRow($("div#noteBoxes"), "noteInputs");
+                newRow($("div#notesBoxes"), "notesInputs");
             });
             /////////////////Remove BUTTON FUNCTIONS/////////////////////////
-            $("a#assetRemove").on("click", function(event) {
+            $("a#assetsRemove").on("click", function(event) {
                 event.preventDefault();
-                removeRow($("div#assetBoxes"), this);
+                removeRow($("div#assetsBoxes"), this);
             });
-            $("a#ctrbnRemove").on("click", function(event) {
+            $("a#contributionsRemove").on("click", function(event) {
                 event.preventDefault();
-                removeRow($("div#ctrbnBoxes"), this);
+                removeRow($("div#contributionsBoxes"), this);
             });
-            $("a#interestRemove").on("click", function(event) {
+            $("a#interestsRemove").on("click", function(event) {
                 event.preventDefault();
-                removeRow($("div#interestBoxes"), this);
+                removeRow($("div#interestsBoxes"), this);
             });
-            $("a#noteRemove").on("click", function(event) {
+            $("a#notesRemove").on("click", function(event) {
                 event.preventDefault();
-                removeRow($("div#noteBoxes"), this);
+                removeRow($("div#notesBoxes"), this);
             });
         });
     </script>
