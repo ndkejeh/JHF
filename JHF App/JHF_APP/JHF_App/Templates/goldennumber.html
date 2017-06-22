@@ -274,11 +274,16 @@
                     $(this).removeClass(baseInputs + 0);
                     return baseInputs + baseBoxes.length;
                 });
-//                alert("from newRow func: "+baseBoxes.length);
-//                alert(baseBoxes.last().attr("class"));
-             //                   alert(baseBoxes.length);
-               // alert($("div#assetsBoxes").length);
-                
+                //Now clear the new input/textarea fields in case the clone has content
+                $("." + baseInputs + baseBoxes.length + " div>input").val("");
+                $("." + baseInputs + baseBoxes.length + " div>textarea").val("");
+                //                alert("."baseInputs+baseBoxes.length+" div>input");
+                //                alert(newBoxes.attr("class"));
+                //                alert("from newRow func: "+baseBoxes.length);
+                //                alert(baseBoxes.last().attr("class"));
+                //                   alert(baseBoxes.length);
+                // alert($("div#assetsBoxes").length);
+
             }
 
             function removeRow(baseBoxes, thisElement) {
@@ -294,25 +299,24 @@
                 $("#found-dob").val("");
                 $("#found").removeAttr("style");
             }
-            
+
             function makeBaseBoxes(tableName) {
-                return "div#"+tableName+"Boxes";
+                return "div#" + tableName + "Boxes";
             }
-            
+
             function makeBaseInputs(tableName) {
-                return tableName+"Inputs";
+                return tableName + "Inputs";
             }
-            
+
             function placeData(dataArr, baseBoxes, baseInputs, ptr) {
                 for (var field in dataArr[ptr]) {
-                    $("."+baseInputs+ptr+ " #"+field).val(dataArr[ptr][field]);
+                    $("." + baseInputs + ptr + " #" + field).val(dataArr[ptr][field]);
                 }
                 if ($(baseBoxes).length < dataArr.length) {
-//                    alert(baseBoxes+".length: "+$(baseBoxes).length+" Array.length: "+dataArr.length);
+                    //                    alert(baseBoxes+".length: "+$(baseBoxes).length+" Array.length: "+dataArr.length);
                     newRow($(baseBoxes), baseInputs); //make a new row for the extra data
-                    placeData(dataArr, baseBoxes, baseInputs, ptr+1);
-                }
-                else {
+                    placeData(dataArr, baseBoxes, baseInputs, ptr + 1);
+                } else {
                     return "true"; //done
                 }
             }
@@ -360,32 +364,32 @@
             $("a#GnDetailsButton").on("click", function(event) {
                 event.preventDefault();
                 //we want to get info from all of the tables so send empty JSON string
-//                alert("length of hello is I don't know");
+                //                alert("length of hello is I don't know");
                 searchJson = JSON.stringify({});
                 $.ajax({
-                   type: "POST",
-                    url: "/jhf/api/v1.0/prospects/gndetails/find/"+$("#foundId").val(), //the ID of the prospect
+                    type: "POST",
+                    url: "/jhf/api/v1.0/prospects/gndetails/find/" + $("#foundId").val(), //the ID of the prospect
                     data: searchJson,
                     contentType: "application/json; charset=UTF-8",
-                    success: function(response){
-//                       alert("Success! "+response["gnDetails"]["assets"][0]["name"]);
+                    success: function(response) {
+                        //                       alert("Success! "+response["gnDetails"]["assets"][0]["name"]);
                         var responseData = response["gnDetails"];
                         for (var tableName in responseData) {
                             if (responseData[tableName].length != 0) { //then there's data so let's enter it!
-//                                alert("Hi again"+tableName);
+                                //                                alert("Hi again"+tableName);
                                 placeData(response["gnDetails"][tableName], makeBaseBoxes(tableName), makeBaseInputs(tableName), 0);
                             }
-                        } 
+                        }
                     },
-                    error: function(){
+                    error: function() {
                         alert("whoops");
                     },
                 });
             });
-            
-            
-            
-            
+
+
+
+
             /////////////////////AddNew BUTTON FUNCTIONS/////////////////////////
             $("a#assetsAddNew").on("click", function(event) {
                 event.preventDefault();

@@ -30,6 +30,10 @@ class contributions(db.Model):
         }
         return objToDict
 
+    def getFields(self):
+        #returns the fields of this object as a list
+        return["amount", "ctype", "cto"]
+
 class notes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     note = db.Column(db.Text)
@@ -50,6 +54,10 @@ class notes(db.Model):
         }
         return objToDict
 
+    def getFields(self):
+        #returns the fields of this object as a list
+        return["note", "ntype"]
+
 class expenditures(db.Model): #has a one-to-one relationship with prospects
     id = db.Column(db.Integer, primary_key=True)
     currentspend = db.Column(db.Numeric(15,2), nullable=False)
@@ -68,6 +76,10 @@ class expenditures(db.Model): #has a one-to-one relationship with prospects
             "goldenspend": str(self.goldenspend),
         }
         return objToDict
+
+    def getFields(self):
+        #returns the fields of this object as a list
+        return["currentspend", "goldenspend"]
 
 class assets(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -92,6 +104,10 @@ class assets(db.Model):
         }
         return objToDict
 
+    def getFields(self):
+        #returns the fields of this object as a list
+        return["name", "value", "atype"]
+
 class interests(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     interest = db.Column(db.String(18))
@@ -112,6 +128,10 @@ class interests(db.Model):
             "itype": self.itype,
         }
         return objToDict
+
+    def getFields(self):
+        #returns the fields of this object as a list
+        return["interest", "itype"]
 
 class prospects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -146,6 +166,10 @@ class prospects(db.Model):
         }
         return objToDict
 
+    def getFields(self):
+        #returns the fields of this object as a list
+        return["fname", "lname", "dob", "retirement_age"]
+
 class referrers(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(100))
@@ -160,6 +184,10 @@ class referrers(db.Model):
             "industry": self.city,
         }
         return objToDict
+
+    def getFields(self):
+        #returns the fields of this object as a list
+        return["name", "city", "industry"]
 
 #//START OF CUSTOM FUNCTIONS
 def dateFormat(badDate):
@@ -176,6 +204,28 @@ def appendToList(**kwargs):
         kwargDict[keys] = kwargs[keys]
     return kwargDict
 
+def dictListToObj(classAddr, dictList):
+    #takes in a list of dictionaries that are fields for a table (that inc. "id" field),
+    #and returns a list of these dictionary fields turned into their existing objects,
+    #or None if the object does not exist
+    getObject = dictToObj(classAddr)
+    return [getObject(dict["id"]) for dict in dictList]
+
+def dictToObj(obj):
+    def getObj(id):
+        return obj.query.get(id)
+    return getObj
+
+def tableAndObjs(table):
+    #takes table name and in the sub func the object list, then
+    #outputs the {table: [{...}, {...}]}
+    def objToOutput(objList):
+        return {table:[dictifyObj(obj) for obj in objList]}
+    return objToOutput
+
+def dictifyObj(obj):
+    return obj.dictifyFields()
+
 def dictifyObjList(objList, end, ptr, outList):
     #function takes a list of object via objList, and returns a list of
     #dictionary kwargs in outList (made by calling the table's dictifyFields method)
@@ -184,6 +234,64 @@ def dictifyObjList(objList, end, ptr, outList):
     else:
         outList.append(objList[ptr].dictifyFields()) #append dictified object fields
         return dictifyObjList(objList,end, ptr+1, outList)
+
+def fieldCheck(checks, fieldValue):
+    #takes in a single field value and the validation check (either a list or string)
+    #will return True if the value passes the validation check or false otherwise
+    if isinstance(checks, list): #then check contains list of passable values
+        if fieldValue not in checks: #then it is not an allowed value
+            return False
+    if fieldValue == "" or checks is None: #if not list it means it's a required field
+        return False #because it's empty
+    return True
+
+def validateFields(vDict, recordList):
+    #takes in a dictionary formatted for validation {"field1": ["setinput1", "setinput2"], "field2": "Required", etc.}
+    #and returns table of true/false based on if the sent kwargs in recordList are valid for entry,
+    #if there are no validation constraints (so fields are valid by default) an empty string is returned instead of falses
+    return [fieldCheck(vDict[field], recordList[field]) for field in recordList if field in vDict]
+
+def validateOwner(recordList, classAddr, forKey, owner):
+    #takes in record list, foreign key, table object address, and owner (prosp_id)
+    #and returns a list of Trues for each record that has owner as the FK, and False for each that does not.
+    # recordObject = classAddr.query.get()
+    return[ownerCheck(x,forKey, owner, classAddr) for x in recordList]
+
+def ownerCheck(record, forKey, owner, classAddr):
+    recordObject = classAddr.query.get(record["id"])
+    if getattr(recordObject,forKey) == owner:
+        return True
+    return False
+    #returns True or False based on whether
+
+def updateTable(classAddr, recordList):
+    #takes in a table object address and records to be updated and returns
+    #a list of handles record handles to later add and commit if valid, or a false
+    #value in the table if one is not valid
+    validRecords = [classAddr.query.get(x["id"]) for x in recordList]
+    if None in validRecords:
+        return[False]
+    return [x.updateRecord(**y) for x,y in zip(validRecords,recordList)]
+
+def updateRecordList(classAddr, recordList):
+    handle = updateRecord(classAddr)
+    return [handle(record) for record in recordList]
+
+def updateRecord(classAddr):
+    #Parent function takes in a classAddr and makes a handle
+    #child function takes in fields (which must include the id field that completes the parent handle)
+    #and fetches the actual fields of the table in question for validation. After entering the valid
+    #fields it returns the record's handle for it to be added and committed outside of the function
+    def setUpdate(record):
+        updateHandle = classAddr.query.get(record["id"])
+        validFields = updateHandle.getFields()
+        passedFields = list(filter(lambda x: x in validFields, record))
+        if len(passedFields) == 0: #then error record's fields don't match those in this table
+            return False
+        holdVar = [setattr(updateHandle, field, record[field]) for field in passedFields]
+        return updateHandle
+    return setUpdate
+
 
 #//START OF FLASK APP ROUTES
 @app.route("/")
@@ -284,20 +392,20 @@ def update_prospect(prosp_id):
         db.session.commit()
         return jsonify(updated_prosp)
 
-@app.route("/jhf/api/v1.0/prospects/gndetails/<int:prosp_id>", methods=["POST", "PUT", "DELETE"]) #the api for updating/adding new prospects and deleting
+@app.route("/jhf/api/v1.0/prospects/gndetails/<int:prosp_id>", methods=["POST", "PUT", "DELETE"]) #the api for updating/adding/deleting prospects Gn Details
 def prospect_gndetails(prosp_id):
     if prosp_id is not None:
         owner = prospects.query.get(prosp_id) #put the right prospect into the owner object
         if owner == None: #then there is no prospect that exist with this ID so abort
             return("Prospect does not exist"), 400
+        #Else build ObbjDict below that stores class memory locations and info on required and constrained cols
+        #if the column is a key in the tables key area then it has prescribed values (if a list), or is required if not
+        objDict = {"expenditures": [{"classaddr": expenditures, "currentspend": "required", "goldenspend": "required"}],
+            "assets": [{"classaddr": assets, "atype": ["Property", "Pension", "Investment", "Fixed"]}],
+            "contributions": [{"classaddr": contributions, "ctype": ["Monthly", "Annual", "Lump Sum", "Final Salary"]}],
+            "interests": [{"classaddr": interests, "itype": ["Services", "Purchases"]}],
+            "notes": [{"classaddr": notes, "ntype": ["Private", "Public"]}]}
         if request.method == "POST":
-            #ObbjDict below stores class memory locations and info on required and constrained cols
-            #if the column is a key in the tables key area then it has prescribed values (if a list), or is required if not
-            objDict = {"expenditures": [{"classaddr": expenditures, "currentspend": "required", "goldenspend": "required"}],
-                "assets": [{"classaddr": assets, "atype": ["Property", "Pension", "Investment", "Fixed"]}],
-                "contributions": [{"classaddr": contributions, "ctype": ["Monthly", "Annual", "Lump Sum", "Final Salary"]}],
-                "interests": [{"classaddr": interests, "itype": ["Services", "Purchases"]}],
-                "notes": [{"classaddr": notes, "ntype": ["Private", "Public"]}]}
             responseDict = {}
             multiDictList = []
             for key in request.json:
@@ -333,13 +441,43 @@ def prospect_gndetails(prosp_id):
             db.session.commit() #now all will be committed if there's no error
             responseDict["status"] = "success"
             return jsonify(responseDict), 200
-        #elif request.method == "PUT"
+        elif request.method == "PUT": #then update API called
+            tablesGroup = request.json["updates"]
+            #first check all records to be updated belong to the prospect whose prosp_id was sent in the requet's URL
+            validOwner = [validateOwner(tablesGroup[table],objDict[table][0]["classaddr"], "prospect_id", prosp_id)
+                for table in tablesGroup]
+            if False in validOwner[0]: #then invalid
+                return jsonify({"error": "not all sent fields belong to prospect ID"})
+            #NOW VALIDATE THE FIELD ENTRIES
+            validFields = [validateFields(objDict[table][0],record) for table in tablesGroup for record in tablesGroup[table]]
+            validFieldsSearch = [x for sublist in validFields for x in sublist] #perform this to flatten the list of lists creates by validateFields
+            if False in validFieldsSearch:
+                return jsonify({"error": "certain fields have invalid values"})
+            #now update the fields and get the handles
+            updateHandles = [updateRecordList(objDict[table][0]["classaddr"], tablesGroup[table]) for table in tablesGroup]
+            return(str(updateHandles))
+            if False in updateHandles:
+                return jsonify({"error": "certain field names in the passes records are incorrect"})
+            [db.session.add(recordHandle) for recordHandle in updateHandles[0]]
+            db.session.commit() #commit the updates
+            #change dictionaries to objects
+            ObjectsInList = [dictListToObj(objDict[table][0]["classaddr"],tablesGroup[table]) for table in tablesGroup]
+            #now put them into output form
+            tables = [x for x in tablesGroup] #put list of tables into a list (the length of which can be ascertained)
+            updatedGnDetails = [tableAndObjs(tables[x])(ObjectsInList[x]) for x in range(len(tables))]
+            returnJSON = {
+                "status": "success",
+                "updates": updatedGnDetails.pop(0), #gndetails are enclosed in a list so pop out
+            }
+            return jsonify(returnJSON), 200
+            # tableUpdates = [tableAdds(request.json[updates][x], objDict[x][0][classaddr],owner) for x in request.json[updates]]
+            #[db.session.add(for ]
         #else #the method is DELETE
     else:
         abort(404)
 
 #THE Gn Details SEARCH API
-@app.route("/jhf/api/v1.0/prospects/gndetails/find/<int:prosp_id>", methods=["POST"]) #the api for updating/adding new prospects and deleting
+@app.route("/jhf/api/v1.0/prospects/gndetails/find/<int:prosp_id>", methods=["POST"]) #The API for searching prospects Gn Details
 def searchProspectGndetails(prosp_id):
     if prosp_id is not None:
         owner = prospects.query.get(prosp_id)
@@ -348,7 +486,7 @@ def searchProspectGndetails(prosp_id):
         tableAddrs = {"assets": assets, "contributions": contributions, "notes": notes,
             "expenditures": expenditures, "interests": interests} #dict of tables and their class addresses
         objSort =[]
-        objSorted = [] #list that will eventually hold the sorted gb details data
+        objSorted = [] #list that will eventually hold the sorted gn details data
         if "specificTables" in request.json: #then there is a request for only specific tables' data
             if isinstance(request.json["specificTables"], list): #then proper format
                 #check table matches in sent specifics of what was sent
@@ -360,12 +498,12 @@ def searchProspectGndetails(prosp_id):
                 #need to solve the case where the reponse is scalar (only one object not a list of them)!!!!
         else: #the user just wants  gn detailsin all tables about the owner sent back
             #get queries from all of the tables
-            returnedTables = [x for x in tableAddrs] #just puts all table names in the list
+            returnedTables = [x for x in tableAddrs] #just puts all table names in the list [potentially redundant]
             objLists = [tableAddrs[x].query.filter_by(prospects=owner).all() for x in tableAddrs]
         #Now prepare the output JSON
         #First condition gn details
-        for tables in objLists:
-            objSorted.append(dictifyObjList(tables, len(tables), 0, objSort))
+        for list in objLists:
+            objSorted.append(dictifyObjList(list, len(list), 0, objSort))
             objSort = [] #clear the list in order to separate the list of objs from different tables
         gnDetails = {}
         #now make a dictionary for gn details

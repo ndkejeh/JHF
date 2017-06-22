@@ -137,11 +137,16 @@ a:focus {
     text-decoration: none;
     color: #b2b2b2;
 }
+
 #gnInfo {
 /*    display: none;*/
 }
 
 /*
+.assetsInputs0 div>input{
+    border-color: red;
+}
+
 .assetsInputs0 #name {
     border-color: red;
 }
