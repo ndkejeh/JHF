@@ -220,6 +220,8 @@ def tableAndObjs(table):
     #takes table name and in the sub func the object list, then
     #outputs the {table: [{...}, {...}]}
     def objToOutput(objList):
+        if len(objList) == 0:
+            return [] #return an empty list as an empty one was sent
         return {table:[dictifyObj(obj) for obj in objList]}
     return objToOutput
 
@@ -291,6 +293,20 @@ def updateRecord(classAddr):
         holdVar = [setattr(updateHandle, field, record[field]) for field in passedFields]
         return updateHandle
     return setUpdate
+
+def getOwnerData(classAddr, **filterKwargs):
+    # return(str(classAddr))
+    data = classAddr.query.filter_by(**filterKwargs).all()
+    if not isinstance(data, list): #if it's a single result, place single obj in list
+        return [data]
+    elif data == None: #i.e. there is no data, then return empty string
+        return []
+    return data #if not the above it's a list of objs so just return
+
+def flattenListOfLists(listOfLists):
+    #takes in a list of lists [[x],[x],[x]] and outputs a flat list of of items
+    #from the sublists [x,x,x]
+    return [x for sublist in listOfLists for x in sublist]
 
 
 #//START OF FLASK APP ROUTES
@@ -365,32 +381,35 @@ def find_prospects(): #this api finds a prospect from the info posted and return
 def update_prospect(prosp_id):
     if prosp_id is not None:
         target = prospects.query.get(prosp_id)
-        if request.method == "DELETE": #delete the prospect and leave
-            db.session.delete(target)
-            returnCode = "204" #i.e. success delete (no content)
-            action = "Deleted"
-        elif request.method == "PUT":
-            #Need to find code that checks there's something in Kwarg before equating!!
-            for updateKey in request.json:
-                if updateKey == "dob": #then we have to condition the entry
-                    request.json[updateKey] = datetime.strptime(request.json[updateKey], "%d/%m/%Y").date()
-                setattr(target, updateKey, request.json[updateKey])
-            db.session.add(target)
-            returnCode = "201" #success created HTML status code
-            action = "Updated"
+        if target is not None:
+            if request.method == "DELETE": #delete the prospect and leave
+                db.session.delete(target)
+                returnCode = "204" #i.e. success delete (no content)
+                action = "Deleted"
+            elif request.method == "PUT":
+                #Need to find code that checks there's something in Kwarg before equating!!
+                for updateKey in request.json:
+                    if updateKey == "dob": #then we have to condition the entry
+                        request.json[updateKey] = datetime.strptime(request.json[updateKey], "%d/%m/%Y").date()
+                    setattr(target, updateKey, request.json[updateKey])
+                db.session.add(target)
+                returnCode = "201" #success created HTML status code
+                action = "Updated"
+            else:
+                abort(400) #exit with bad code as not PUT or DELETE
+            #Return preparation
+            updated_prosp = {
+                "fname": target.fname,
+                "lname": target.lname,
+                "dob": dateFormat(getattr(target,"dob")),
+                "retirement_age": target.retirement_age,
+                "status": returnCode,
+                "action": action,
+            }
+            db.session.commit()
+            return jsonify(updated_prosp)
         else:
-            abort(400) #exit with bad code as not PUT or DELETE
-        #Return preparation
-        updated_prosp = {
-            "fname": target.fname,
-            "lname": target.lname,
-            "dob": dateFormat(getattr(target,"dob")),
-            "retirement_age": target.retirement_age,
-            "status": returnCode,
-            "action": action,
-        }
-        db.session.commit()
-        return jsonify(updated_prosp)
+            abort(404)
 
 @app.route("/jhf/api/v1.0/prospects/gndetails/<int:prosp_id>", methods=["POST", "PUT", "DELETE"]) #the api for updating/adding/deleting prospects Gn Details
 def prospect_gndetails(prosp_id):
@@ -450,12 +469,11 @@ def prospect_gndetails(prosp_id):
                 return jsonify({"error": "not all sent fields belong to prospect ID"})
             #NOW VALIDATE THE FIELD ENTRIES
             validFields = [validateFields(objDict[table][0],record) for table in tablesGroup for record in tablesGroup[table]]
-            validFieldsSearch = [x for sublist in validFields for x in sublist] #perform this to flatten the list of lists creates by validateFields
+            validFieldsSearch = flattenListOfLists(validFields) #perform this to flatten the list of lists creates by validateFields
             if False in validFieldsSearch:
                 return jsonify({"error": "certain fields have invalid values"})
             #now update the fields and get the handles
             updateHandles = [updateRecordList(objDict[table][0]["classaddr"], tablesGroup[table]) for table in tablesGroup]
-            return(str(updateHandles))
             if False in updateHandles:
                 return jsonify({"error": "certain field names in the passes records are incorrect"})
             [db.session.add(recordHandle) for recordHandle in updateHandles[0]]
@@ -465,16 +483,39 @@ def prospect_gndetails(prosp_id):
             #now put them into output form
             tables = [x for x in tablesGroup] #put list of tables into a list (the length of which can be ascertained)
             updatedGnDetails = [tableAndObjs(tables[x])(ObjectsInList[x]) for x in range(len(tables))]
+
             returnJSON = {
                 "status": "success",
-                "updates": updatedGnDetails.pop(0), #gndetails are enclosed in a list so pop out
+                "operation": "update",
+                "data": updatedGnDetails,
             }
             return jsonify(returnJSON), 200
-            # tableUpdates = [tableAdds(request.json[updates][x], objDict[x][0][classaddr],owner) for x in request.json[updates]]
-            #[db.session.add(for ]
-        #else #the method is DELETE
+        elif request.method == "DELETE":
+            #first fetch all data owned by the prosp_id
+            ownerKwarg = {"prospect_id":prosp_id}
+            ownerData = [getOwnerData(objDict[x][0]["classaddr"], **ownerKwarg) for x in objDict]
+            # return(str(ownerData))
+            filteredOwnerData = [x for x in ownerData if len(x) > 0]
+            if len(filteredOwnerData) == 0: #then exit as there are no records to delete
+                return jsonify("this prospect has no Golden Number details to delete")
+            #prep for output then, then flatten and delete
+            tableList = [x for x in objDict] #create list of tables
+            deletedData = [tableAndObjs(tableList[x])(ownerData[x]) for x in range(len(tableList))]
+            filteredDeletedData = [x for x in deletedData if not isinstance(x,list)]
+            #now delete owner's data
+            toDelete = flattenListOfLists(filteredOwnerData) #condition to just get a list of objects
+            # return (str(filteredOwnerData))
+            [db.session.delete(x) for x in toDelete] #goes through and delete's
+            db.session.commit() #commit the changes
+            #return info to user
+            returnJSON = {
+                "status": "success",
+                "operation": "delete",
+                "data": filteredDeletedData,
+            }
+            return jsonify(returnJSON), 200
     else:
-        abort(404)
+        abort(405)
 
 #THE Gn Details SEARCH API
 @app.route("/jhf/api/v1.0/prospects/gndetails/find/<int:prosp_id>", methods=["POST"]) #The API for searching prospects Gn Details
@@ -517,7 +558,7 @@ def searchProspectGndetails(prosp_id):
         }
         return jsonify(returnJSON), 200
     else:
-        abort(400)
+        abort(405)
 
 if __name__ == "__main__":
     app.run(debug=True)
