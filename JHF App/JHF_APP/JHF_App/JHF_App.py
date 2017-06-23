@@ -308,6 +308,11 @@ def flattenListOfLists(listOfLists):
     #from the sublists [x,x,x]
     return [x for sublist in listOfLists for x in sublist]
 
+def getDataKeys(dict):
+    #takes in a dict with an arbitrary number of keys and returns
+    #all of the keys in a table
+    return [x for x in dict]
+
 
 #//START OF FLASK APP ROUTES
 @app.route("/")
@@ -561,6 +566,22 @@ def searchProspectGndetails(prosp_id):
         return jsonify(returnJSON), 200
     else:
         abort(405)
+
+#THE SELECT DELETE API FOR GN DETAILS
+@app.route("/jhf/api/v1.0/prospects/gndetails/selectdelete/<int:prosp_id>", methods=["DELETE"])
+def selectDelete_gnDetails(prosp_id):
+    if prosp_id is not None:
+        #populate table of class addresses
+        classAddr = {"expenditures": expenditures, "assets": assets, "contributions": contributions, "interests": interests, "notes": notes}
+        jsonData = request.json["delete"]
+        #Get list of tables first
+        receivedTables = [getDataKeys(x) for x in jsonData]
+        tableList = flattenListOfLists(receivedTables)
+        #now format list of data dictionaries
+        kwargData = [jsonData[x][tableList[x]] for x in range(len(tableList))]
+        #turn dicts into objects
+        objList = [dictListToObj(classAddr[x], y) for x,y in zip(tableList, kwargData)]
+        return(str(objList))
 
 if __name__ == "__main__":
     app.run(debug=True)
