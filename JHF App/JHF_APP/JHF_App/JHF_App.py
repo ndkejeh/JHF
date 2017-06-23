@@ -483,7 +483,6 @@ def prospect_gndetails(prosp_id):
             #now put them into output form
             tables = [x for x in tablesGroup] #put list of tables into a list (the length of which can be ascertained)
             updatedGnDetails = [tableAndObjs(tables[x])(ObjectsInList[x]) for x in range(len(tables))]
-
             returnJSON = {
                 "status": "success",
                 "operation": "update",
@@ -491,29 +490,32 @@ def prospect_gndetails(prosp_id):
             }
             return jsonify(returnJSON), 200
         elif request.method == "DELETE":
-            #first fetch all data owned by the prosp_id
-            ownerKwarg = {"prospect_id":prosp_id}
-            ownerData = [getOwnerData(objDict[x][0]["classaddr"], **ownerKwarg) for x in objDict]
-            # return(str(ownerData))
-            filteredOwnerData = [x for x in ownerData if len(x) > 0]
-            if len(filteredOwnerData) == 0: #then exit as there are no records to delete
-                return jsonify("this prospect has no Golden Number details to delete")
-            #prep for output then, then flatten and delete
-            tableList = [x for x in objDict] #create list of tables
-            deletedData = [tableAndObjs(tableList[x])(ownerData[x]) for x in range(len(tableList))]
-            filteredDeletedData = [x for x in deletedData if not isinstance(x,list)]
-            #now delete owner's data
-            toDelete = flattenListOfLists(filteredOwnerData) #condition to just get a list of objects
-            # return (str(filteredOwnerData))
-            [db.session.delete(x) for x in toDelete] #goes through and delete's
-            db.session.commit() #commit the changes
-            #return info to user
-            returnJSON = {
-                "status": "success",
-                "operation": "delete",
-                "data": filteredDeletedData,
-            }
-            return jsonify(returnJSON), 200
+            if request.get_json(silent = True) is None: #then good we received nothing as demanded so continue
+                #first fetch all data owned by the prosp_id
+                ownerKwarg = {"prospect_id":prosp_id}
+                ownerData = [getOwnerData(objDict[x][0]["classaddr"], **ownerKwarg) for x in objDict]
+                # return(str(ownerData))
+                filteredOwnerData = [x for x in ownerData if len(x) > 0]
+                if len(filteredOwnerData) == 0: #then exit as there are no records to delete
+                    return jsonify("this prospect has no Golden Number details to delete")
+                #prep for output then, then flatten and delete
+                tableList = [x for x in objDict] #create list of tables
+                deletedData = [tableAndObjs(tableList[x])(ownerData[x]) for x in range(len(tableList))]
+                filteredDeletedData = [x for x in deletedData if not isinstance(x,list)]
+                #now delete owner's data
+                toDelete = flattenListOfLists(filteredOwnerData) #condition to just get a list of objects
+                # return (str(filteredOwnerData))
+                [db.session.delete(x) for x in toDelete] #goes through and delete's
+                db.session.commit() #commit the changes
+                #return info to user
+                returnJSON = {
+                    "status": "success",
+                    "operation": "delete",
+                    "data": filteredDeletedData,
+                }
+                return jsonify(returnJSON), 200
+            else:
+                abort(400)
     else:
         abort(405)
 
