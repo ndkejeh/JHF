@@ -216,7 +216,12 @@ def dictToObj(obj):
         return obj.query.get(id)
     return getObj
 
-def tableAndObjs(table):
+def jsonTableAndObjs(tableList, objList):
+    #takes a list of the tables, and a list of lists of objs [[obj, obj], [obj]]
+    #with tableList and objList arranged in order of table ownership
+    return [outputTableAndObjs(tableList[x])(objList[x]) for x in range(len(tableList))]
+
+def outputTableAndObjs(table):
     #takes table name and in the sub func the object list, then
     #outputs the {table: [{...}, {...}]}
     def objToOutput(objList):
@@ -304,14 +309,25 @@ def getOwnerData(classAddr, **filterKwargs):
     return data #if not the above it's a list of objs so just return
 
 def flattenListOfLists(listOfLists):
-    #takes in a list of lists [[x],[x],[x]] and outputs a flat list of of items
+    #takes in a list of lists [[x],[x],[x]] and outputs a flat list of items
     #from the sublists [x,x,x]
     return [x for sublist in listOfLists for x in sublist]
 
-def getDataKeys(dict):
-    #takes in a dict with an arbitrary number of keys and returns
-    #all of the keys in a table
-    return [x for x in dict]
+def deleteObjs(flatObjList):
+    #takes in a flat list of objects [obj, obj, obj]
+    #deletes them and returns True
+    [db.session.delete(obj) for obj in flatObjList]
+    return True
+
+def getDictKeys(dict):
+    #takes in an arbitrary list of dicts and returns the keys in each of the
+    # dicts. May get a list containing nested dicts, but will only return the keys
+    #of the top layer of dicts (e.g [{key1: [{-},{-}]}, {key2: [{-}]}}] key1 & key2 returned)
+    return [keys for data in dict for keys in data]
+
+def filterEmptyLists(listOfLists):
+    #takes a list of lists and returns only the nested lists that are not empty
+    return [x for x in listOfLists if len(x)>0]
 
 
 #//START OF FLASK APP ROUTES
@@ -487,7 +503,7 @@ def prospect_gndetails(prosp_id):
             ObjectsInList = [dictListToObj(objDict[table][0]["classaddr"],tablesGroup[table]) for table in tablesGroup]
             #now put them into output form
             tables = [x for x in tablesGroup] #put list of tables into a list (the length of which can be ascertained)
-            updatedGnDetails = [tableAndObjs(tables[x])(ObjectsInList[x]) for x in range(len(tables))]
+            updatedGnDetails = [outputTableAndObjs(tables[x])(ObjectsInList[x]) for x in range(len(tables))]
             returnJSON = {
                 "status": "success",
                 "operation": "update",
@@ -505,7 +521,7 @@ def prospect_gndetails(prosp_id):
                     return jsonify("this prospect has no Golden Number details to delete")
                 #prep for output then, then flatten and delete
                 tableList = [x for x in objDict] #create list of tables
-                deletedData = [tableAndObjs(tableList[x])(ownerData[x]) for x in range(len(tableList))]
+                deletedData = [outputTableAndObjs(tableList[x])(ownerData[x]) for x in range(len(tableList))]
                 filteredDeletedData = [x for x in deletedData if not isinstance(x,list)]
                 #now delete owner's data
                 toDelete = flattenListOfLists(filteredOwnerData) #condition to just get a list of objects
@@ -550,18 +566,23 @@ def searchProspectGndetails(prosp_id):
             objLists = [tableAddrs[x].query.filter_by(prospects=owner).all() for x in tableAddrs]
         #Now prepare the output JSON
         #First condition gn details
-        for list in objLists:
-            objSorted.append(dictifyObjList(list, len(list), 0, objSort))
-            objSort = [] #clear the list in order to separate the list of objs from different tables
-        gnDetails = {}
+        detailsFound = jsonTableAndObjs(returnedTables, objLists)
+        #now take out any empty lists (indicating there is no data for that table)
+        filteredDetailsFound = filterEmptyLists(detailsFound)
+        # return (str(filteredDetailsFound))
+        # for list in objLists:
+        #     objSorted.append(dictifyObjList(list, len(list), 0, objSort))
+        #     objSort = [] #clear the list in order to separate the list of objs from different tables
+        # gnDetails = {}
         #now make a dictionary for gn details
-        for x in returnedTables:
-            gnDetails[x] = objSorted.pop(0)
+        # for x in returnedTables:
+        #     gnDetails[x] = objSorted.pop(0)
         #And now condition the rest of the JSON
         returnJSON = {
-            "found": "true",
+            "status": "success",
+            "operation": "search",
             "prospect": owner.dictifyFields(),
-            "gnDetails": gnDetails,
+            "gnDetails": filteredDetailsFound,
         }
         return jsonify(returnJSON), 200
     else:
@@ -575,13 +596,29 @@ def selectDelete_gnDetails(prosp_id):
         classAddr = {"expenditures": expenditures, "assets": assets, "contributions": contributions, "interests": interests, "notes": notes}
         jsonData = request.json["delete"]
         #Get list of tables first
-        receivedTables = [getDataKeys(x) for x in jsonData]
-        tableList = flattenListOfLists(receivedTables)
+        tableList = getDictKeys(jsonData)
         #now format list of data dictionaries
         kwargData = [jsonData[x][tableList[x]] for x in range(len(tableList))]
         #turn dicts into objects
         objList = [dictListToObj(classAddr[x], y) for x,y in zip(tableList, kwargData)]
-        return(str(objList))
+        #now first of all produce list of JSON ordered list of deletedData for JSON output
+        deletedJsonData = jsonTableAndObjs(tableList,objList)
+        #now delete the objects before output
+        # return(str(objList))
+        toDelete = flattenListOfLists(objList)
+        deleted = deleteObjs(toDelete)
+        if deleted == True:
+            db.session.commit()
+            returnJSON = {
+                "status": "success",
+                "operation": "delete",
+                "data": deletedJsonData,
+            }
+            return jsonify(returnJSON), 200
+        else:
+            abort(400)
+    else:
+        abort(400)
 
 if __name__ == "__main__":
     app.run(debug=True)
