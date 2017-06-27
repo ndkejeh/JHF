@@ -243,7 +243,7 @@ def dictifyObjList(objList, end, ptr, outList):
         return dictifyObjList(objList,end, ptr+1, outList)
 
 def fieldCheck(checks, fieldValue):
-    #takes in a single field value and the validation checks (either a list or string)
+    #takes in a single field value and the validation check (either a list or string)
     #will return True if the value passes the validation check or false otherwise
     if isinstance(checks, list): #then check contains list of passable values
         if fieldValue not in checks: #then it is not an allowed value
@@ -328,12 +328,6 @@ def getDictKeys(dict):
 def filterEmptyLists(listOfLists):
     #takes a list of lists and returns only the nested lists that are not empty
     return [x for x in listOfLists if len(x)>0]
-
-def newRows(classAddr, dataList):
-    #takes the memory address of the table class and a list of data in dicts,
-    #(can be one dict in the list), and returns the handles of the new rows
-    #in a list
-    return [classAddr(**data) for data in dataList]
 
 
 #//START OF FLASK APP ROUTES
@@ -438,7 +432,7 @@ def update_prospect(prosp_id):
         else:
             abort(404)
 
-@app.route("/jhf/api/v1.0/prospects/gndetails/<int:prosp_id>", methods=["POST", "PUT", "DELETE"]) #the API for updating/adding/deleting prospects Gn Details
+@app.route("/jhf/api/v1.0/prospects/gndetails/<int:prosp_id>", methods=["POST", "PUT", "DELETE"]) #the api for updating/adding/deleting prospects Gn Details
 def prospect_gndetails(prosp_id):
     if prosp_id is not None:
         owner = prospects.query.get(prosp_id) #put the right prospect into the owner object
@@ -451,64 +445,41 @@ def prospect_gndetails(prosp_id):
             "contributions": [{"classaddr": contributions, "ctype": ["Monthly", "Annual", "Lump Sum", "Final Salary"]}],
             "interests": [{"classaddr": interests, "itype": ["Services", "Purchases"]}],
             "notes": [{"classaddr": notes, "ntype": ["Private", "Public"]}]}
-            if "data" in request.json:
-                jsonData = request.json["data"] #handle for list of sent data items
-            else:
-                abort(400) #bad request as json format was not sent as needed
         if request.method == "POST":
-            tableList = getDictKeys(jsonData) #get involved/sent tables in list
-            dataList = [jsonData[x][tableList[x]] for x in range(len(tableList))] #get the corresponding data into a list in table order
-            #VALIDATION
-            #now validate fields based on the conditions in the objDict above
-            validateCheck = [validateFields(objDict[table][0], dataList[tableData]) for table, tableData in zip (tableList, dataList)]
-            if False in validateCheck: #then one of the received data is not fit for entry
-                return jsonify{"status": "failed", "operation": "add", "data": "invalid entries"}
-            #expenditures table as one-to-one relatioinship with prospects so check we're not trying to create multiple
-            if "expenditures" in tableList and owner.expenditures is not None:
-                return {"status": "failed", "operation": "add", "data": "this prospect already has information on current and golden expenditure"}
-            #CREATE AND ENTER THE NEW ROWS
-            rowHandles = [newRows(objDict[table][0]["classAddr"], dataList[tableData]) for table, tableData in zip(tableList, dataList)]
-            #now flatten row handles prior to add an commit
-            return (str(rowHandles))
-            flatRowHandles = flattenListOfLists(rowHandles)
-            [db.session.add(x) for x in flatRowHandles] #add new rows
-            db.session.commit() #commit new rows
-            #NOW PREPARE FOR OUTPUT
-
-            # responseDict = {}
-            # multiDictList = []
-            # for key in request.json:
-            #     if isinstance(request.json[key], list): #then it's an array of objects with table values
-            #         #THIS IS WHERE WE SHOULD DO THE VALIDATION!!
-            #         for count, val in enumerate(request.json[key]): #I really only want the count but don't know how to do this without getting both
-            #             for newCols in request.json[key][count]:
-            #                 for specialCols in objDict[key][0]:
-            #                     if newCols == specialCols: #then this is a protected column
-            #                         if isinstance(objDict[key][0][specialCols], list): #then there are prescribed values for col
-            #                             goodVal = 0
-            #                             for prescribedVals in objDict[key][0][specialCols]:
-            #                                 if prescribedVals == request.json[key][count][newCols]: #Good, it has an allowed value
-            #                                     goodVal = 1
-            #                             if goodVal == 0:
-            #                                 return("Bad value in table %s number %s, column %s" %(key, (count+1), newCols)), 400
-            #                         else: #it's a required field and states that in its key-value pair
-            #                             if request.json[key][count][newCols] is None or request.json[key][count][newCols] is "": #then bad empty val
-            #                                 return("%s column in %s table cannot be empty" %(newCols, key)), 400
-            #         #End of validation - anything that gets here has passed and new entry can begin
-            #         for z in range(len(request.json[key])):
-            #             if key == "expenditures" and owner.expenditures is not None: #for one-to-many integrity
-            #                 return("This prospect already has expenditure data"), 400 #an expenditure entry already exists, need to update not add new!!
-            #             kwargList = request.json[key].pop(0)
-            #             multiDictList.append(appendToList(**kwargList))
-            #             kwargList["prospects"] = owner #this will handle the foreign key field linking to prospects
-            #             #APPEND TO AN EMPTY LIST HERE FOR THE OUTPUT
-            #             newRow = objDict[key][0]["classaddr"](**kwargList) #makes a new row/obj in table key
-            #             db.session.add(newRow)
-            #         responseDict[key] = multiDictList
-            #         multiDictList = []
-            # return jsonify(responseDict)
-            # db.session.commit() #now all will be committed if there's no error
-            # responseDict["status"] = "success"
+            responseDict = {}
+            multiDictList = []
+            for key in request.json:
+                if isinstance(request.json[key], list): #then it's an array of objects with table values
+                    #THIS IS WHERE WE SHOULD DO THE VALIDATION!!
+                    for count, val in enumerate(request.json[key]): #I relaly only want the count but don't know how to do this withough getting both
+                        for newCols in request.json[key][count]:
+                            for specialCols in objDict[key][0]:
+                                if newCols == specialCols: #then this is a protected column
+                                    if isinstance(objDict[key][0][specialCols], list): #then there are prescribed values for col
+                                        goodVal = 0
+                                        for prescribedVals in objDict[key][0][specialCols]:
+                                            if prescribedVals == request.json[key][count][newCols]: #Good, it has an allowed value
+                                                goodVal = 1
+                                        if goodVal == 0:
+                                            return("Bad value in table %s number %s, column %s" %(key, (count+1), newCols)), 400
+                                    else: #it's a required field and states that in its key-value pair
+                                        if request.json[key][count][newCols] is None or request.json[key][count][newCols] is "": #then bad empty val
+                                            return("%s column in %s table cannot be empty" %(newCols, key)), 400
+                    #End of validation - anything that gets here has passed and new entry can begin
+                    for z in range(len(request.json[key])):
+                        if key == "expenditures" and owner.expenditures is not None: #for one-to-many integrity
+                            return("This prospect already has expenditure data"), 400 #an expenditure entry already exists, need to update not add new!!
+                        kwargList = request.json[key].pop(0)
+                        multiDictList.append(appendToList(**kwargList))
+                        kwargList["prospects"] = owner #this will handle the foreign key field linking to prospects
+                        #APPEND TO AN EMPTY LIST HERE FOR THE OUTPUT
+                        newRow = objDict[key][0]["classaddr"](**kwargList) #makes a new row/obj in table key
+                        db.session.add(newRow)
+                    responseDict[key] = multiDictList
+                    multiDictList = []
+            return jsonify(responseDict)
+            db.session.commit() #now all will be committed if there's no error
+            responseDict["status"] = "success"
             return jsonify(responseDict), 200
         elif request.method == "PUT": #then update API called
             tablesGroup = request.json["updates"]
@@ -598,15 +569,7 @@ def searchProspectGndetails(prosp_id):
         detailsFound = jsonTableAndObjs(returnedTables, objLists)
         #now take out any empty lists (indicating there is no data for that table)
         filteredDetailsFound = filterEmptyLists(detailsFound)
-        # return (str(filteredDetailsFound))
-        # for list in objLists:
-        #     objSorted.append(dictifyObjList(list, len(list), 0, objSort))
-        #     objSort = [] #clear the list in order to separate the list of objs from different tables
-        # gnDetails = {}
-        #now make a dictionary for gn details
-        # for x in returnedTables:
-        #     gnDetails[x] = objSorted.pop(0)
-        #And now condition the rest of the JSON
+        #And now output data
         returnJSON = {
             "status": "success",
             "operation": "search",
