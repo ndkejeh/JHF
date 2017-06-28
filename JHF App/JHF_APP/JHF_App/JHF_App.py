@@ -258,6 +258,18 @@ def validateFields(vDict, recordList):
     #if there are no validation constraints (so fields are valid by default) an empty string is returned instead of falses
     return [fieldCheck(vDict[field], recordList[field]) for field in recordList if field in vDict]
 
+def fieldValidation(vDict):
+    def validateData(data):
+        return [fieldCheck(vDict[field], data[field]) for field in data if field in vDict]
+    return validateData
+
+def digestAndExecute(fHandle, breakList):
+    #receives a function handle/address, and a list of any item type that
+    #needs to be individually passed to a function via its handle fHandle
+    #will flatten the response so as to not return an overly nested list
+    response = [fHandle(x) for x in breakList]
+    return flattenListOfLists(response)
+
 def validateOwner(recordList, classAddr, forKey, owner):
     #takes in record list, foreign key, table object address, and owner (prosp_id)
     #and returns a list of Trues for each record that has owner as the FK, and False for each that does not.
@@ -329,6 +341,15 @@ def filterEmptyLists(listOfLists):
     #takes a list of lists and returns only the nested lists that are not empty
     return [x for x in listOfLists if len(x)>0]
 
+<<<<<<< HEAD
+=======
+def newRows(classAddr, dataList, owner):
+    #takes the memory address of the table class and a list of data in dicts,
+    #(can be one dict in the list), and returns the handles of the new rows
+    #in a list
+    return [classAddr(**data, prospects=owner) for data in dataList]
+
+>>>>>>> origin/JHFSP3
 
 #//START OF FLASK APP ROUTES
 @app.route("/")
@@ -440,6 +461,7 @@ def prospect_gndetails(prosp_id):
             return("Prospect does not exist"), 400
         #Else build ObbjDict below that stores class memory locations and info on required and constrained cols
         #if the column is a key in the tables key area then it has prescribed values (if a list), or is required if not
+<<<<<<< HEAD
         objDict = {"expenditures": [{"classaddr": expenditures, "currentspend": "required", "goldenspend": "required"}],
             "assets": [{"classaddr": assets, "atype": ["Property", "Pension", "Investment", "Fixed"]}],
             "contributions": [{"classaddr": contributions, "ctype": ["Monthly", "Annual", "Lump Sum", "Final Salary"]}],
@@ -481,28 +503,65 @@ def prospect_gndetails(prosp_id):
             db.session.commit() #now all will be committed if there's no error
             responseDict["status"] = "success"
             return jsonify(responseDict), 200
+=======
+        objDict = {"expenditures": [{"classAddr": expenditures, "currentspend": "required", "goldenspend": "required"}],
+            "assets": [{"classAddr": assets, "atype": ["Property", "Pension", "Investment", "Fixed"]}],
+            "contributions": [{"classAddr": contributions, "ctype": ["Monthly", "Annual", "Lump Sum", "Final Salary"]}],
+            "interests": [{"classAddr": interests, "itype": ["Service", "Purchase"]}],
+            "notes": [{"classAddr": notes, "ntype": ["Private", "Public"]}]}
+        if "data" in request.json:
+            jsonData = request.json["data"] #handle for list of sent data items
+        else:
+            abort(400) #bad request as json format was not sent as needed
+        if request.method == "POST":
+            tableList = getDictKeys(jsonData) #get involved/sent tables in list
+            dataList = [jsonData[x][tableList[x]] for x in range(len(tableList))] #get the corresponding data into a list in table order
+            #VALIDATION
+            #now validate fields based on the conditions in the objDict above
+            validateCheck = [digestAndExecute(fieldValidation(objDict[y][0]), dataList[x]) for y in tableList for x in range(len(tableList))]
+            flatValidateCheck = flattenListOfLists(validateCheck)
+            if False in flatValidateCheck: #then one of the received data is not fit for entry
+                return jsonify({"status": "failed", "operation": "add", "data": "invalid entries"})
+            #expenditures table as one-to-one relatioinship with prospects so check we're not trying to create multiple
+            if "expenditures" in tableList and owner.expenditures is not None:
+                return jsonify({"status": "failed", "operation": "add", "data": "this prospect already has information on current and golden expenditure"})
+            #CREATE AND ENTER THE NEW ROWS
+            rowHandles = [newRows(objDict[table][0]["classAddr"], dataList[tableData], owner) for table, tableData in zip(tableList, range(len(dataList)))]
+            #now flatten row handles prior to add an commit
+            flatRowHandles = flattenListOfLists(rowHandles)
+            # ownedHandles = addOwner(owner, flatRowHandles)
+            [db.session.add(x) for x in flatRowHandles] #add new rows
+            db.session.commit() #commit new rows
+            #NOW OUTPUT NEW ROWS
+            addedDetails = [outputTableAndObjs(tableList[x])(rowHandles[x]) for x in range(len(tableList))]
+            returnJSON = {
+                "status": "success",
+                "operation": "create",
+                "data": addedDetails,
+            }
+            return jsonify(returnJSON), 200
+>>>>>>> origin/JHFSP3
         elif request.method == "PUT": #then update API called
-            tablesGroup = request.json["updates"]
             #first check all records to be updated belong to the prospect whose prosp_id was sent in the requet's URL
-            validOwner = [validateOwner(tablesGroup[table],objDict[table][0]["classaddr"], "prospect_id", prosp_id)
-                for table in tablesGroup]
+            validOwner = [validateOwner(jsonData[table],objDict[table][0]["classaddr"], "prospect_id", prosp_id)
+                for table in jsonData]
             if False in validOwner[0]: #then invalid
                 return jsonify({"error": "not all sent fields belong to prospect ID"})
             #NOW VALIDATE THE FIELD ENTRIES
-            validFields = [validateFields(objDict[table][0],record) for table in tablesGroup for record in tablesGroup[table]]
+            validFields = [validateFields(objDict[table][0],record) for table in jsonData for record in jsonData[table]]
             validFieldsSearch = flattenListOfLists(validFields) #perform this to flatten the list of lists creates by validateFields
             if False in validFieldsSearch:
                 return jsonify({"error": "certain fields have invalid values"})
             #now update the fields and get the handles
-            updateHandles = [updateRecordList(objDict[table][0]["classaddr"], tablesGroup[table]) for table in tablesGroup]
+            updateHandles = [updateRecordList(objDict[table][0]["classaddr"], jsonData[table]) for table in jsonData]
             if False in updateHandles:
                 return jsonify({"error": "certain field names in the passes records are incorrect"})
             [db.session.add(recordHandle) for recordHandle in updateHandles[0]]
             db.session.commit() #commit the updates
             #change dictionaries to objects
-            ObjectsInList = [dictListToObj(objDict[table][0]["classaddr"],tablesGroup[table]) for table in tablesGroup]
+            ObjectsInList = [dictListToObj(objDict[table][0]["classaddr"],jsonData[table]) for table in jsonData]
             #now put them into output form
-            tables = [x for x in tablesGroup] #put list of tables into a list (the length of which can be ascertained)
+            tables = [x for x in jsonData] #put list of tables into a list (the length of which can be ascertained)
             updatedGnDetails = [outputTableAndObjs(tables[x])(ObjectsInList[x]) for x in range(len(tables))]
             returnJSON = {
                 "status": "success",
@@ -512,6 +571,7 @@ def prospect_gndetails(prosp_id):
             return jsonify(returnJSON), 200
         elif request.method == "DELETE":
             if request.get_json(silent = True) is None: #then good we received nothing as demanded so continue
+                #having silent = True above prevents an error if there request is None
                 #first fetch all data owned by the prosp_id
                 ownerKwarg = {"prospect_id":prosp_id}
                 ownerData = [getOwnerData(objDict[x][0]["classaddr"], **ownerKwarg) for x in objDict]
