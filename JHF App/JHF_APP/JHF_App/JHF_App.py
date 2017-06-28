@@ -277,11 +277,23 @@ def validateOwner(recordList, classAddr, forKey, owner):
     return[ownerCheck(x,forKey, owner, classAddr) for x in recordList]
 
 def ownerCheck(record, forKey, owner, classAddr):
+    #takes in a record (AS A KWARG NOT AN OBJECT!), gets its recordObject from the
+    #db using its id. If the recordObject is owned by the passed owner, True is returned, else False
     recordObject = classAddr.query.get(record["id"])
     if getattr(recordObject,forKey) == owner:
         return True
     return False
-    #returns True or False based on whether
+
+def ownerCheckObject(owner):
+    def recordCheck(recordObject, forKey):
+        #like ownerCheck function above but takes record in already as an object instead
+        #of as a Kwarg. Returns True if the ForeignKey of the record indicates ownership, and false otherwise
+        #It's higher-order to be able to work with (so be passed to) the digestAndExecute function.
+        if getattr(recordObject, forKey) == owner:
+            return True
+        return False
+    return recordCheck
+
 
 def updateTable(classAddr, recordList):
     #takes in a table object address and records to be updated and returns
@@ -452,9 +464,7 @@ def update_prospect(prosp_id):
 @app.route("/jhf/api/v1.0/prospects/gndetails/<int:prosp_id>", methods=["POST", "PUT", "DELETE"]) #the api for updating/adding/deleting prospects Gn Details
 def prospect_gndetails(prosp_id):
     if prosp_id is not None:
-        owner = prospects.query.get(prosp_id) #put the right prospect into the owner object
-        if owner == None: #then there is no prospect that exist with this ID so abort
-            return("Prospect does not exist"), 400
+        owner = prospects.query.get_or_404(prosp_id) #finds the owner from prosp_id or aborts with 404
         #Else build ObbjDict below that stores class memory locations and info on required and constrained cols
         #if the column is a key in the tables key area then it has prescribed values (if a list), or is required if not
         objDict = {"expenditures": [{"classAddr": expenditures, "currentspend": "required", "goldenspend": "required"}],
@@ -530,7 +540,7 @@ def prospect_gndetails(prosp_id):
                 # return(str(ownerData))
                 filteredOwnerData = [x for x in ownerData if len(x) > 0]
                 if len(filteredOwnerData) == 0: #then exit as there are no records to delete
-                    return jsonify("this prospect has no Golden Number details to delete")
+                    return jsonify("this prospect has no Golden Number details to delete"), 400
                 #prep for output then, then flatten and delete
                 tableList = [x for x in objDict] #create list of tables
                 deletedData = [outputTableAndObjs(tableList[x])(ownerData[x]) for x in range(len(tableList))]
@@ -596,29 +606,39 @@ def searchProspectGndetails(prosp_id):
 @app.route("/jhf/api/v1.0/prospects/gndetails/selectdelete/<int:prosp_id>", methods=["DELETE"])
 def selectDelete_gnDetails(prosp_id):
     if prosp_id is not None:
-        #populate table of class addresses
-        classAddr = {"expenditures": expenditures, "assets": assets, "contributions": contributions, "interests": interests, "notes": notes}
-        jsonData = request.json["delete"]
-        #Get list of tables first
-        tableList = getDictKeys(jsonData)
-        #now format list of data dictionaries
-        kwargData = [jsonData[x][tableList[x]] for x in range(len(tableList))]
-        #turn dicts into objects
-        objList = [dictListToObj(classAddr[x], y) for x,y in zip(tableList, kwargData)]
-        #now first of all produce list of JSON ordered list of deletedData for JSON output
-        deletedJsonData = jsonTableAndObjs(tableList,objList)
-        #now delete the objects before output
-        # return(str(objList))
-        toDelete = flattenListOfLists(objList)
-        deleted = deleteObjs(toDelete)
-        if deleted == True:
-            db.session.commit()
-            returnJSON = {
-                "status": "success",
-                "operation": "delete",
-                "data": deletedJsonData,
-            }
-            return jsonify(returnJSON), 200
+        if "delete" in request.json:
+            #populate table of class addresses
+            classAddr = {"expenditures": expenditures, "assets": assets, "contributions": contributions, "interests": interests, "notes": notes}
+            jsonData = request.json["delete"]
+            #Get list of tables first
+            tableList = getDictKeys(jsonData)
+            #now format list of data dictionaries
+            kwargData = [jsonData[x][tableList[x]] for x in range(len(tableList))]
+            #turn dicts into objects
+            objList = [dictListToObj(classAddr[x], y) for x,y in zip(tableList, kwargData)]
+            flatObjList = flattenListOfLists(objList)
+            if None in flatObjList:
+                return jsonify("Some or all of the records passed for deletion do not exist"), 404
+            #NOW CHECK that all records/objects are owned by <prosp_id>
+            checkOwner = ownerCheckObject(prosp_id) #higher-order function handle
+            validOwner = [checkOwner(x, "prospect_id") for x in flatObjList]
+            if False in validOwner:
+                return jsonify("Not all passed records are owned by the passed prospect"), 400
+            #now first of all produce list of JSON ordered list of deletedData for JSON output
+            deletedJsonData = jsonTableAndObjs(tableList,objList)
+            #now delete the objects before output
+            # toDelete = flattenListOfLists(objList)
+            deleted = deleteObjs(flatObjList)
+            if deleted == True:
+                db.session.commit()
+                returnJSON = {
+                    "status": "success",
+                    "operation": "delete",
+                    "data": deletedJsonData,
+                }
+                return jsonify(returnJSON), 200
+            else:
+                abort(400)
         else:
             abort(400)
     else:
