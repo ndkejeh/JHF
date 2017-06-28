@@ -341,15 +341,11 @@ def filterEmptyLists(listOfLists):
     #takes a list of lists and returns only the nested lists that are not empty
     return [x for x in listOfLists if len(x)>0]
 
-<<<<<<< HEAD
-=======
 def newRows(classAddr, dataList, owner):
     #takes the memory address of the table class and a list of data in dicts,
     #(can be one dict in the list), and returns the handles of the new rows
     #in a list
     return [classAddr(**data, prospects=owner) for data in dataList]
-
->>>>>>> origin/JHFSP3
 
 #//START OF FLASK APP ROUTES
 @app.route("/")
@@ -461,49 +457,6 @@ def prospect_gndetails(prosp_id):
             return("Prospect does not exist"), 400
         #Else build ObbjDict below that stores class memory locations and info on required and constrained cols
         #if the column is a key in the tables key area then it has prescribed values (if a list), or is required if not
-<<<<<<< HEAD
-        objDict = {"expenditures": [{"classaddr": expenditures, "currentspend": "required", "goldenspend": "required"}],
-            "assets": [{"classaddr": assets, "atype": ["Property", "Pension", "Investment", "Fixed"]}],
-            "contributions": [{"classaddr": contributions, "ctype": ["Monthly", "Annual", "Lump Sum", "Final Salary"]}],
-            "interests": [{"classaddr": interests, "itype": ["Services", "Purchases"]}],
-            "notes": [{"classaddr": notes, "ntype": ["Private", "Public"]}]}
-        if request.method == "POST":
-            responseDict = {}
-            multiDictList = []
-            for key in request.json:
-                if isinstance(request.json[key], list): #then it's an array of objects with table values
-                    #THIS IS WHERE WE SHOULD DO THE VALIDATION!!
-                    for count, val in enumerate(request.json[key]): #I relaly only want the count but don't know how to do this withough getting both
-                        for newCols in request.json[key][count]:
-                            for specialCols in objDict[key][0]:
-                                if newCols == specialCols: #then this is a protected column
-                                    if isinstance(objDict[key][0][specialCols], list): #then there are prescribed values for col
-                                        goodVal = 0
-                                        for prescribedVals in objDict[key][0][specialCols]:
-                                            if prescribedVals == request.json[key][count][newCols]: #Good, it has an allowed value
-                                                goodVal = 1
-                                        if goodVal == 0:
-                                            return("Bad value in table %s number %s, column %s" %(key, (count+1), newCols)), 400
-                                    else: #it's a required field and states that in its key-value pair
-                                        if request.json[key][count][newCols] is None or request.json[key][count][newCols] is "": #then bad empty val
-                                            return("%s column in %s table cannot be empty" %(newCols, key)), 400
-                    #End of validation - anything that gets here has passed and new entry can begin
-                    for z in range(len(request.json[key])):
-                        if key == "expenditures" and owner.expenditures is not None: #for one-to-many integrity
-                            return("This prospect already has expenditure data"), 400 #an expenditure entry already exists, need to update not add new!!
-                        kwargList = request.json[key].pop(0)
-                        multiDictList.append(appendToList(**kwargList))
-                        kwargList["prospects"] = owner #this will handle the foreign key field linking to prospects
-                        #APPEND TO AN EMPTY LIST HERE FOR THE OUTPUT
-                        newRow = objDict[key][0]["classaddr"](**kwargList) #makes a new row/obj in table key
-                        db.session.add(newRow)
-                    responseDict[key] = multiDictList
-                    multiDictList = []
-            return jsonify(responseDict)
-            db.session.commit() #now all will be committed if there's no error
-            responseDict["status"] = "success"
-            return jsonify(responseDict), 200
-=======
         objDict = {"expenditures": [{"classAddr": expenditures, "currentspend": "required", "goldenspend": "required"}],
             "assets": [{"classAddr": assets, "atype": ["Property", "Pension", "Investment", "Fixed"]}],
             "contributions": [{"classAddr": contributions, "ctype": ["Monthly", "Annual", "Lump Sum", "Final Salary"]}],
@@ -540,7 +493,6 @@ def prospect_gndetails(prosp_id):
                 "data": addedDetails,
             }
             return jsonify(returnJSON), 200
->>>>>>> origin/JHFSP3
         elif request.method == "PUT": #then update API called
             #first check all records to be updated belong to the prospect whose prosp_id was sent in the requet's URL
             validOwner = [validateOwner(jsonData[table],objDict[table][0]["classaddr"], "prospect_id", prosp_id)
